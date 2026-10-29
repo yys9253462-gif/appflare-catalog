@@ -1,3 +1,27 @@
+# This catalog
+
+A private copy of the [Appflare catalog](https://github.com/appflare/catalog),
+signed with its own key. It carries only the apps this manager installs.
+
+Add it in Appflare under **Settings > Catalogs > Add catalog**:
+
+- **Index URL**: `https://yys9253462-gif.github.io/appflare-catalog/index.json`
+- **Public key**:
+
+```json
+{"keyId":"yys9253462-gif-2026-10","publicKeyBase64":"/VioFbEWodpbJifio6zNSyKUzBnLLuwkC7Tetjxlizw="}
+```
+
+- **Fingerprint**: `SHA256:bdzib5njKeZ4hoh+Kief68VK/nGdFjfLhG7/xZNZIsM`
+  (the Add a catalog dialog shows the fingerprint of the key you paste; compare it
+  with this line before saving)
+
+Apps: `counterscale`, `open-seo`, `sink`. Everything else from the template was
+removed; add one back from `appflare/catalog` and the next publish builds and signs
+it.
+
+---
+
 <h1 align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo_full_white.svg">
