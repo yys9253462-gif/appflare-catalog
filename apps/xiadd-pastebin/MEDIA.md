@@ -1,1 +1,0 @@
-- `icon.svg` from [`public/logo.svg`](https://github.com/xiadd/pastebin-worker/blob/5af66e42e4174c6e69223502bd46aafbeffbd0f5/public/logo.svg), licensed [MIT](https://github.com/xiadd/pastebin-worker/blob/5af66e42e4174c6e69223502bd46aafbeffbd0f5/LICENCE): Unchanged visually; the first path command gained one space, which changes nothing visually.

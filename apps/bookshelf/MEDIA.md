@@ -1,4 +1,0 @@
-- `icon.png` ← [`apps/bookshelf/public/web-app-manifest-512x512.png`](https://github.com/murerkinn/bookshelf/blob/8888795162ff76285f246957cc34cc9988253a60/apps/bookshelf/public/web-app-manifest-512x512.png): Scaled from 512x512 to 256x256.
-- `cover.png` ← [`apps/bookshelf/src/app/opengraph-image.jpg`](https://github.com/murerkinn/bookshelf/blob/8888795162ff76285f246957cc34cc9988253a60/apps/bookshelf/src/app/opengraph-image.jpg): Converted from JPEG to PNG.
-- `screenshots/01-book-shelf.png` ← [`docs/shelf.webp`](https://github.com/murerkinn/bookshelf/blob/8888795162ff76285f246957cc34cc9988253a60/docs/shelf.webp): Converted from WebP to PNG and scaled from 1880x1224 to 1600x1042.
-- `screenshots/02-book-reader.png` ← [`docs/reader.webp`](https://github.com/murerkinn/bookshelf/blob/8888795162ff76285f246957cc34cc9988253a60/docs/reader.webp): Converted from WebP to PNG and scaled from 2200x1226 to 1600x892.

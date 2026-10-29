@@ -1,1 +1,0 @@
-- `icon.png` from the upstream [project logo](https://public-assets.turborepo-remote-cache.dev/images/logo.png): Padded from 668x645 to a transparent 668x668 square; Scaled to 256x256.
