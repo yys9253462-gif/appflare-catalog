@@ -1,0 +1,80 @@
+{
+  // Only the relay Worker (cloudflare/) is installed. The repository's site/
+  // Worker is upstream's marketing site and download host, and the reminal
+  // program itself is a Go binary people install on their own machines.
+  "$schema": "https://appflare.github.io/catalog/schema/v1.json",
+  "slug": "reminal",
+  "name": "Reminal",
+  "summary": "Your own relay for reminal: reach the terminals, app windows and desktops of your machines from any browser, end-to-end encrypted, with nothing listening on the machines.",
+  "tagline": "Reach your computers' windows and terminals from any browser",
+  "features": [
+    "Use your computer's terminal from a phone or browser after installing its computer client",
+    "Control individual app windows or the full desktop remotely",
+    "Share a live session with someone using a session ID and PIN",
+    "Transfer files between computers with a one-time code",
+    "Share a local web app through a PIN-protected public link",
+    "Keep terminal and window sessions encrypted from computer to browser"
+  ],
+  "alternativeTo": ["ngrok", "TeamViewer"],
+  "homepage": "https://reminal.app",
+  "repo": "harshalgajjar/Reminal",
+  "license": "AGPL-3.0-or-later",
+  "categories": ["remote-access", "developer-tools"],
+  // The formatting of URLs in the notes changed after this release was published:
+  // a revision, no new build.
+  // Added features and alternatives (revision 3).
+  "revision": 3,
+  "authors": [{ "name": "Harshal Gajjar", "github": "harshalgajjar" }],
+  "maintainers": ["MendyLanda"],
+  "source": { "ref": "v3.17.44", "sha": "9c6ad0d1a5e9d75ffa94e8c455ab04a8d5baa6f5" },
+  "install": {
+    "packageManager": "npm",
+    "wranglerConfig": "cloudflare/wrangler.toml",
+    // The relay is its own npm project with its own lockfile; the root is Go.
+    "installDirs": [{ "path": "cloudflare" }],
+    // The config's build makes the viewer from internal/client/web, and for a
+    // deploy it refuses to run unless an earlier run kept the live Worker's
+    // older builds. A new install has no live Worker, so --first-deploy keeps
+    // none. Updates also skip keeping them, so a browser tab left open across
+    // an update has to reload.
+    "buildCommand": "node cloudflare/scripts/build-viewer.mjs --first-deploy",
+    "configPatch": { "build": null },
+    // The critical-upgrade beacon the reminal program polls; no sign-in.
+    "health": { "path": "/version" }
+  },
+  // Two SQLite-backed Durable Object classes and static assets. Window and
+  // desktop frames go peer-to-peer over WebRTC, so the relay carries only
+  // terminal traffic and signalling.
+  "plan": "free",
+  "secrets": [
+    {
+      // Upstream reads the key as a JWK, which the install form cannot
+      // generate, so phone alerts stay off until the admin pastes a pair.
+      "name": "VAPID_PRIVATE_JWK",
+      "label": "Alerts private key (JWK)",
+      "help": "Turns on phone and desktop alerts: a P-256 VAPID private key as a JSON Web Key ({\"kty\":\"EC\",\"crv\":\"P-256\",\"d\":…,\"x\":…,\"y\":…}). Set the matching public key below too. Never change the pair once browsers have subscribed.",
+      "optional": true
+    }
+  ],
+  "vars": [
+    {
+      // The wrangler config carries upstream's own public key; without a
+      // matching private key it would only advertise a key nobody here holds.
+      "name": "VAPID_PUBLIC",
+      "label": "Alerts public key",
+      "help": "The public half of the alerts key, as unpadded base64url of the 65-byte uncompressed point. Leave it empty to keep alerts off.",
+      "default": "",
+      "optional": true
+    }
+  ],
+  "postInstall": [
+    {
+      "type": "markdown",
+      "content": "Install the reminal program on each machine you want to reach ([upstream's one-line setup](https://github.com/harshalgajjar/Reminal#set-it-up-in-one-line)) and point it at this relay:\n\n```sh\nREMINAL_WEB={{appUrl}} reminal\n```\n\nIt prints a session ID, a PIN and a QR code; open the link on any device and enter the PIN."
+    },
+    {
+      "type": "markdown",
+      "content": "The relay has no accounts of its own. Each session is reachable only with the session ID and PIN the machine prints, or from a device you enrolled as an owner with `reminal own`. Terminal and window traffic is end-to-end encrypted. `reminal expose` port forwards are the exception: they serve a local web port at `{{appUrl}}/p/<id>/` behind the PIN, and pass through this Worker unencrypted."
+    }
+  ]
+}

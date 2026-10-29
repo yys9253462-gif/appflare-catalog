@@ -1,0 +1,140 @@
+{
+  "$schema": "https://appflare.github.io/catalog/schema/v1.json",
+  "slug": "resolvehq",
+  "name": "ResolveHQ",
+  "summary": "A self-hosted helpdesk: a shared inbox fed by Email Routing, threaded tickets, SLAs and snoozes, a help center and knowledge base, customer ratings, reports, a scoped API and outbound webhooks, on D1, R2 and Queues.",
+  "tagline": "Manage customer emails and support tickets in your own account",
+  "features": [
+    "Handle customer email in a shared inbox, with replies sent through your Resend account",
+    "Assign tickets to teammates and organize them with priorities and tags",
+    "Save reusable replies for common questions",
+    "Set response deadlines around your working hours and holidays",
+    "Publish knowledge-base articles in a public help center",
+    "See ticket volume and response times, and export reports to CSV"
+  ],
+  "alternativeTo": ["Zendesk", "Intercom"],
+  "homepage": "https://getresolvehq.com",
+  "repo": "mirza-rizvi/ResolveHQ",
+  // The LICENSE file is the author's own "ResolveHQ Source-Available License":
+  // personal or internal deployment is allowed; selling it, offering it as a
+  // hosted service, and redistributing copies need the author's written
+  // permission. It has no SPDX id.
+  "license": "LicenseRef-ResolveHQ-Source-Available",
+  "licenseNote": "Source-available: free to run for personal or internal use; selling it, hosting it for others or sharing copies needs the author's permission",
+  "categories": ["business", "email"],
+  // APP_URL starts at the app's address since revision 2, which this release was
+  // built with. Edited help text (revision 3) and field links (revision 4) came
+  // after it was published: revisions, no new build.
+  // Added features and alternatives (revision 5).
+  "revision": 5,
+  "authors": [{ "name": "Rizvi", "github": "mirza-rizvi", "x": "mirza_rizvi" }],
+  "maintainers": ["MendyLanda"],
+  "source": { "ref": "v0.3.4", "sha": "427e7b061c68b4bc1ea5bd08be1c809e282529bd" },
+  "install": {
+    "packageManager": "npm",
+    "wranglerConfig": "wrangler.jsonc",
+    // Upstream's `build` script: a TypeScript project check, then Vite with
+    // the Cloudflare plugin builds the React app and the Worker together.
+    "buildCommand": "npm run build",
+    // Answers without a sign-in and fails with 503 until every table the
+    // Worker expects exists, so it also proves the migrations ran.
+    "health": { "path": "/api/ready" },
+    // Customer mail arrives through Email Routing. support@<zone> goes to the
+    // Worker; use that address as the support email when you sign up.
+    "emailRouting": { "rules": ["support"] }
+  },
+  // D1, R2, Queues (three work queues, each with a dead-letter queue that the
+  // Worker also consumes), two rate limits, one cron trigger every five
+  // minutes and receiving mail all fit the free plan. Upstream measured a
+  // sign-up at about 29 ms of CPU against the free plan's 10 ms per request,
+  // which Cloudflare tolerates now and then; it recommends Workers Paid
+  // before real volume. Cloudflare Email Sending is commented out in the
+  // pinned config, so replies go out through Resend.
+  "plan": "free",
+  "requires": ["zone", "email-routing", "r2"],
+  "secrets": [
+    {
+      "name": "SESSION_PEPPER",
+      "label": "Session pepper",
+      "help": "Mixed into every password hash and session. At least 32 characters. Setting a new value signs everyone out and makes existing passwords stop working.",
+      "generate": "password"
+    },
+    {
+      "name": "RESEND_API_KEY",
+      "label": "Resend API key",
+      "help": "From resend.com. Replies, password resets and invitations are sent through Resend; without a key they show as failed.",
+      "link": { "label": "Get a key", "url": "https://resend.com/api-keys" },
+      "optional": true
+    },
+    {
+      "name": "RESEND_WEBHOOK_SECRET",
+      "label": "Resend webhook secret",
+      "help": "Signing secret of a Resend webhook pointed at this app, so delivery and bounce events reach tickets.",
+      "link": { "label": "Add a webhook", "url": "https://resend.com/webhooks" },
+      "optional": true
+    },
+    {
+      "name": "OPENAI_API_KEY",
+      "label": "OpenAI API key",
+      "help": "Turns on AI assistance and translation with OpenAI. Each workspace still opts in under Settings > AI assistance.",
+      "link": { "label": "Get a key", "url": "https://platform.openai.com/api-keys" },
+      "optional": true
+    },
+    {
+      "name": "TURNSTILE_SECRET_KEY",
+      "label": "Turnstile secret key",
+      "help": "Together with the Turnstile site key below: a Turnstile challenge on sign-in, sign-up and password reset.",
+      "link": {
+        "label": "Create a widget",
+        "url": "https://dash.cloudflare.com/?to=/:account/turnstile"
+      },
+      "optional": true
+    }
+  ],
+  "vars": [
+    {
+      "name": "APP_URL",
+      "label": "App URL",
+      "help": "The address your agents use, without a trailing slash, for links in outgoing mail and for sign-in checks. Left empty, links use the address each request arrives on, and satisfaction surveys are not sent.",
+      // Queued replies have no request to take an address from, so without a
+      // value the app leaves the satisfaction survey out of resolving replies.
+      "default": "{{appUrl}}",
+      "optional": true
+    },
+    {
+      "name": "SYSTEM_MAIL_FROM",
+      "label": "Sender address",
+      "help": "The From of password reset and invitation emails, at a domain verified in Resend, for example no-reply@support.example.com.",
+      "default": "",
+      "optional": true
+    },
+    {
+      "name": "TURNSTILE_SITE_KEY",
+      "label": "Turnstile site key",
+      "help": "The public key of a Managed Turnstile widget for this app's hostname; set it together with the Turnstile secret key.",
+      "link": {
+        "label": "Create a widget",
+        "url": "https://dash.cloudflare.com/?to=/:account/turnstile"
+      },
+      "default": "",
+      "optional": true
+    },
+    {
+      "name": "TICKET_RETENTION_DAYS",
+      "label": "Ticket retention (days)",
+      "help": "A whole number from 1 to 3650: the cron permanently deletes resolved and closed tickets older than that, with their attachments. Leave it empty to keep everything.",
+      "default": "",
+      "optional": true
+    }
+  ],
+  "postInstall": [
+    {
+      "type": "markdown",
+      "content": "Open {{appUrl}} and sign up: your name, email, a workspace, and support@ at the zone you chose as the support email. That address becomes the default inbox, and mail sent to it arrives as tickets."
+    },
+    {
+      "type": "markdown",
+      "content": "Open {{appUrl}}/setup for a checklist of the deployment's configuration and your mail domain's MX, SPF, DKIM and DMARC records. Replies go out once a Resend API key and a sender address are set in this app's settings."
+    }
+  ]
+}

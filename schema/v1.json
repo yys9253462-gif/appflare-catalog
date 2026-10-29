@@ -1,0 +1,4563 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://appflare.github.io/catalog/schema/v1.json",
+  "title": "Appflare catalog manifest (appflare.jsonc)",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri"
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,62}$",
+      "description": "The entry's permanent id, in lowercase letters, digits and hyphens, for example `open-seo`. It is also the entry's folder in the catalog, the first part of its release tags (`<slug>@<version>`) and the Worker name the install form suggests. It never changes once the entry is published."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The app's name as the catalog and the manager show it, for example `Open SEO`."
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "description": "What the app does and who it is for, in a few plain sentences, shown on the app's page (a blank line starts a new paragraph). The catalog search reads it too."
+    },
+    "tagline": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "allOf": [
+        {
+          "pattern": "^\\S(?:[^\\r\\n]*\\S)?$"
+        },
+        {
+          "pattern": "[^.]$"
+        }
+      ],
+      "description": "What the app does, as one plain sentence of at most 80 characters, without a trailing period, such as \"Short links on your own domain\". Shown under the app's name on catalog tiles."
+    },
+    "features": {
+      "minItems": 3,
+      "maxItems": 6,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100,
+        "allOf": [
+          {
+            "pattern": "^\\S(?:[^\\r\\n]*\\S)?$"
+          },
+          {
+            "pattern": "[^.]$"
+          }
+        ]
+      },
+      "uniqueItems": true,
+      "description": "What the app does for the person who installs it, as 3 to 6 plain lines of at most 100 characters each, without a trailing period, such as \"Share short links that open your long ones\". Written for people who are not developers, from the upstream project's own description, each line saying something different. Shown on the app's page. Leave it out to list none."
+    },
+    "alternativeTo": {
+      "minItems": 1,
+      "maxItems": 5,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 40,
+        "allOf": [
+          {
+            "pattern": "^\\S(?:[^\\r\\n]*\\S)?$"
+          },
+          {
+            "pattern": "^(?![Ww]{3}\\.)[^/]*$"
+          }
+        ]
+      },
+      "uniqueItems": true,
+      "description": "The well-known products or services the app can replace, as 1 to 5 names of at most 40 characters each, such as \"Google Analytics\" or \"Plausible\". Names only, no URLs. Shown on the app's page. Leave it out to list none."
+    },
+    "homepage": {
+      "type": "string",
+      "pattern": "^https:\\/\\/",
+      "description": "The app's website, as an https:// URL. Defaults to its repository on GitHub."
+    },
+    "repo": {
+      "type": "string",
+      "pattern": "^[^/\\s]+\\/[^/\\s]+$",
+      "description": "The public GitHub repository the app is built from, as `owner/repo`. The source pin, builds and version bumps always use this repository. Also shown as the app's source code link unless `upstreamRepo` names its main project."
+    },
+    "upstreamRepo": {
+      "type": "string",
+      "pattern": "^[^/\\s]+\\/[^/\\s]+$",
+      "description": "The app's main public GitHub repository, as `owner/repo`, when `repo` is a deployment template or a fork. Used for source code links, GitHub stars, and the default homepage and authors. Builds, source pins and version bumps still use `repo`."
+    },
+    "license": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The license the app's own repository declares, as an SPDX license expression of current SPDX ids: `MIT`, `Apache-2.0`, `GPL-3.0-only`, `MIT OR Apache-2.0`, or a source-available license such as `BUSL-1.1`, `FSL-1.1-MIT` or `Elastic-2.0`. Deprecated ids such as `GPL-3.0` are refused: write `-only` or `-or-later`, as the project's license notice says. For a license without an SPDX id, write `LicenseRef-<name>` and describe it in `licenseNote`; write `NONE` when the repository publishes no license. The catalog shows the license on the app's card and page; it never decides whether an app is listed."
+    },
+    "licenseNote": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160,
+      "pattern": "^\\S(?:[^\\r\\n]*\\S)?$",
+      "description": "One short line shown next to the license, for what its id does not say, such as \"Source-available: production use restricted; see the license\". An app with a note is shown as source-available."
+    },
+    "categories": {
+      "minItems": 1,
+      "maxItems": 3,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "ai",
+          "analytics",
+          "bots",
+          "business",
+          "chat",
+          "cms",
+          "community",
+          "developer-tools",
+          "ecommerce",
+          "education",
+          "email",
+          "family",
+          "files",
+          "finance",
+          "games",
+          "marketing",
+          "media",
+          "monitoring",
+          "networking",
+          "notes",
+          "notifications",
+          "passwords",
+          "privacy",
+          "productivity",
+          "remote-access",
+          "scheduling",
+          "security",
+          "sharing",
+          "sync",
+          "utilities"
+        ]
+      },
+      "uniqueItems": true,
+      "description": "One to 3 categories the catalog lists the app under, each once: `ai` (AI), `analytics` (Analytics), `bots` (Bots), `business` (Business), `chat` (Chat), `cms` (Websites and blogs), `community` (Community), `developer-tools` (Developer tools), `ecommerce` (E-commerce), `education` (Education), `email` (Email), `family` (Family), `files` (Files), `finance` (Finance), `games` (Games), `marketing` (Marketing), `media` (Media), `monitoring` (Monitoring), `networking` (Networking), `notes` (Notes), `notifications` (Notifications), `passwords` (Passwords), `privacy` (Privacy), `productivity` (Productivity), `remote-access` (Remote access), `scheduling` (Scheduling), `security` (Security), `sharing` (Sharing), `sync` (Sync), `utilities` (Utilities)."
+    },
+    "authors": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "The author's name as shown in the catalog, for example `Ben Senescu`."
+          },
+          "url": {
+            "type": "string",
+            "pattern": "^https:\\/\\/",
+            "description": "The author's website, as an https:// URL."
+          },
+          "github": {
+            "type": "string",
+            "pattern": "^(?=.{1,39}$)[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$",
+            "description": "The author's GitHub username or organization, without @."
+          },
+          "x": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_]{1,15}$",
+            "description": "The author's X (Twitter) handle, without @."
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false,
+        "description": "A person or organization that wrote the app, with optional links."
+      },
+      "description": "Who wrote the app upstream: one or more people or organizations, shown on the catalog card and the app's page. Not the people who package it for the catalog (those are `maintainers`). When omitted, the catalog lists the owner of `upstreamRepo`, or `repo` when no upstream repository is set."
+    },
+    "maintainers": {
+      "default": [],
+      "description": "The GitHub usernames, without @, of the people who package the app for the catalog and look after this entry, shown as \"Packaged by\". Not the app's own authors (those are `authors`).",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "ref": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The tag or branch of the app's repository this entry is built from, for example `v1.4.2` or `main`. A tag that is a semver version is also the version the catalog shows. The catalog's bump bot moves it when upstream publishes a new release."
+        },
+        "sha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$",
+          "description": "The commit the entry is built from, as its full 40-character SHA in lower case: the commit `ref` pointed at when the entry was last updated. The build always uses this commit, so a moved tag or a new commit on the branch changes nothing until `sha` does."
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$",
+          "description": "The version shown for this entry when the repository's tag does not describe this app (monorepos); it must change whenever `sha` moves. Omitted, the version comes from `ref` when it is a semver tag, else from the pinned commit's date and SHA."
+        }
+      },
+      "required": [
+        "ref",
+        "sha"
+      ],
+      "additionalProperties": false
+    },
+    "install": {
+      "type": "object",
+      "properties": {
+        "tier": {
+          "default": "artifact",
+          "description": "How the app is built: `\"artifact\"` (the default: a signed release catalog CI builds), `\"sandbox\"` (built from the pinned commit in the account's sandbox Worker) or `\"self-deploying\"` (the app's own installer, run in the sandbox Worker).",
+          "type": "string",
+          "enum": [
+            "artifact",
+            "sandbox",
+            "self-deploying"
+          ]
+        },
+        "packageManager": {
+          "type": "string",
+          "enum": [
+            "pnpm",
+            "npm",
+            "yarn",
+            "bun"
+          ]
+        },
+        "wranglerConfig": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The wrangler config to build from, relative to the repository root, for example `wrangler.jsonc`. A config the repository keeps only as a template (`wrangler.toml.example`, `wrangler.jsonc.template`) is copied to its real name (`wrangler.toml`) before it is read."
+        },
+        "workerName": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The Worker name the install form suggests; the admin may change it unless `fixedWorkerName` is set. Defaults to the entry's `slug`."
+        },
+        "fixedWorkerName": {
+          "default": false,
+          "description": "The app only works under `workerName` (for example, it hard-codes its own hostname), so it installs at most once per account.",
+          "type": "boolean"
+        },
+        "health": {
+          "default": {
+            "path": "/",
+            "mode": "no-server-errors"
+          },
+          "type": "object",
+          "properties": {
+            "path": {
+              "default": "/",
+              "description": "The path the manager probes, for example `/api/health`. When it answers JSON with a string `version`, an update's check of the new version requires that version. Defaults to `\"/\"`.",
+              "type": "string",
+              "pattern": "^\\/[^\\s?#]*$"
+            },
+            "mode": {
+              "default": "no-server-errors",
+              "type": "string",
+              "enum": [
+                "no-server-errors",
+                "any-response"
+              ],
+              "description": "Which answers of the Worker count as serving. `\"no-server-errors\"` (the default): any answer but a server error (5xx), so a redirect or a 404 passes and a 500 fails. `\"any-response\"`: any answer the Worker itself gives, server errors included; use it for an app whose health path asks for a sign-in, its own or one it checks from Cloudflare Access. Either way, connection failures and Cloudflare's own error pages (such as `error code: 1042` while the route goes live) are retried and never count as serving, and neither does the redirect to Cloudflare Access's sign-in page, which Access sends before the request reaches the Worker."
+            }
+          },
+          "additionalProperties": false,
+          "description": "How the manager checks that the app serves after an install, update or rollback."
+        },
+        "buildCommand": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 256,
+              "pattern": "^[A-Za-z0-9@%+,./:=_ -]+$"
+            },
+            {
+              "minItems": 1,
+              "maxItems": 8,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 256,
+                "pattern": "^[A-Za-z0-9@%+,./:=_ -]+$"
+              }
+            }
+          ],
+          "description": "The command the packer runs at the root of the checkout after installing dependencies (with install scripts disabled) and before bundling, for example `pnpm --filter @scope/web build`, or a list of such commands run in order, for example `[\"pnpm run build:sphere\", \"pnpm run build\"]`; the build stops at the first that fails. Use it when the wrangler config has no `build.command`. Each runs as a plain command without a shell, with no credentials in its environment and the checkout's `node_modules/.bin` on its PATH, so pipes, redirects, quotes, variables, and environment assignments are not allowed. pnpm and npm run no pre or post hooks of package scripts there (`pnpm run build` skips `prebuild`), so list such a step as a command of its own. At most 8 commands of at most 256 characters each."
+        },
+        "buildEnv": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^(?!(?:CLOUDFLARE_|WRANGLER_|CF_|APPFLARE_|ESBUILD_|MINIFLARE_|WORKERD_|NODE_|NPM_|NPX_|PNPM_|YARN_|BUN_|COREPACK_|DENO_|GIT_|GITHUB_|RUNNER_|ACTIONS_|BASH|SHELLOPTS|LD_|DYLD_|GCONV|SSL_|OPENSSL_|CURL_|XDG_|PYTHON|PERL5|RUBY|JAVA_|_JAVA|CARGO_|RUST|TURBO_|NX_|PRISMA_))(?!(?:PATH|HOME|USER|LOGNAME|SHELL|PWD|OLDPWD|TMPDIR|TMP|TEMP|LANG|TERM|TZ|GOPATH|GOROOT|GOFLAGS|GOPROXY|GOENV|GOCACHE|GOMODCACHE|GOPRIVATE|GONOSUMDB|GONOSUMCHECK|GOINSECURE|GOTOOLCHAIN|GOWORK|HOSTNAME|CI|GH_TOKEN|ENV|PS4|IFS|CDPATH|GLOBIGNORE|PROMPT_COMMAND|HTTP_PROXY|HTTPS_PROXY|ALL_PROXY|NO_PROXY|FTP_PROXY)$)(?!.*(?:SECRET|PASSWORD|PASSWD|PASSPHRASE|TOKEN|PRIVATE|CREDENTIAL))[A-Z][A-Z0-9_]*$",
+            "maxLength": 128
+          },
+          "additionalProperties": {
+            "type": "string",
+            "maxLength": 4096
+          },
+          "minProperties": 1,
+          "maxProperties": 32,
+          "description": "Public constants the build compiles into the app, by name, for example `{ \"VITE_API_ORIGIN\": \"https://api.example.com\" }`: the packer sets them in the environment of every build command and of wrangler's bundling. Everyone can read them (the catalog publishes them and the build writes them into downloadable files), so a name that looks like a credential (containing SECRET, PASSWORD, PASSWD, PASSPHRASE, TOKEN, PRIVATE or CREDENTIAL) is refused, and so is a name the build's tools read: wrangler and what it runs (WRANGLER_, CLOUDFLARE_, CF_, ESBUILD_, MINIFLARE_, WORKERD_), Node.js and package managers (NODE_, NPM_, PNPM_, YARN_, BUN_, COREPACK_, DENO_), git and CI (GIT_, GITHUB_, RUNNER_, ACTIONS_, CI), shells (BASH*, ENV, IFS, PS4, PROMPT_COMMAND and the like), the dynamic linker (LD_, DYLD_, GCONV*), TLS and HTTP clients (SSL_, OPENSSL_, CURL_, *_PROXY), configuration directories (XDG_, HOME, TMPDIR), other toolchains (PYTHON*, PERL5*, RUBY*, JAVA_, CARGO_, RUST*, GOPATH, GOFLAGS and the other Go settings), and build tools (TURBO_, NX_, PRISMA_). Catalog review reads every constant as well. Upper-case names, at most 32 constants. Not for the self-deploying tier."
+        },
+        "installDirs": {
+          "maxItems": 8,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "pattern": "^(?:\\.|(?!\\.\\.?(?:/|$))[0-9A-Za-z.@+_-]+(?:/(?!\\.\\.?(?:/|$))[0-9A-Za-z.@+_-]+)*)$",
+                "description": "The directory to install, relative to the root of the checkout: `.` for the root, or a path such as `templates/blog`. No absolute paths and no `..`."
+              },
+              "packageManager": {
+                "type": "string",
+                "enum": [
+                  "pnpm",
+                  "npm",
+                  "yarn",
+                  "bun"
+                ],
+                "description": "The package manager to install this directory with. Omitted, it is `install.packageManager` when the directory holds that manager's lockfile or no lockfile at all, else the one its lockfile names."
+              },
+              "lockfile": {
+                "default": "required",
+                "type": "string",
+                "enum": [
+                  "required",
+                  "none"
+                ],
+                "description": "Omitted or `\"required\"`, the install follows the directory's lockfile exactly and fails without one. `\"none\"` resolves the dependencies instead and records the hash of the lockfile it wrote in the pack log; use it only when upstream ships no lockfile for this directory."
+              },
+              "devDependencies": {
+                "default": true,
+                "description": "`false` installs this directory's dependencies without its devDependencies (pnpm `--prod`, npm `--omit=dev`, classic yarn and bun `--production`), for a project whose devDependencies cannot be installed (one from a private registry, say) and are not needed to bundle the Worker. Omitted or `true` installs them all. yarn 2 and later have no such frozen install, so they refuse it.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "path"
+            ],
+            "additionalProperties": false
+          },
+          "description": "The directories whose dependencies the packer installs, in order, each with install scripts disabled, before any build command. Omitted means `[{ \"path\": \".\" }]`, the root of the checkout; list `.` as well when the root still needs its install. Use it when the Worker's `package.json` sits in a directory of its own (a template repository), or for a second install beside the root one. At most 8 directories. An empty list installs nothing, for a repository without a `package.json`: wrangler bundles the entry and its relative imports, and any build command runs with no dependencies installed. An entry of several Workers lists them once for all its Workers."
+        },
+        "emailRouting": {
+          "type": "object",
+          "properties": {
+            "worker": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 24,
+              "pattern": "^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$",
+              "description": "For an app of several Workers (`install.workers`): the `name` of the Worker that receives the mail, which must export an `email` handler. Omitted means the primary Worker. Email Routing delivers to a Worker by name, not over HTTP, so a Worker with `workersDev: false` can receive mail. An entry that sets it lists `\"email-worker\"` in `requires`."
+            },
+            "catchAll": {
+              "default": false,
+              "description": "Send every address of the zone that no other rule matches to the app (the zone's catch-all rule). The install refuses when the catch-all already sends mail somewhere else.",
+              "type": "boolean"
+            },
+            "rules": {
+              "default": [],
+              "maxItems": 10,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^(?=[^@]{1,64}(?:@|$))[a-z0-9]+(?:[._+-][a-z0-9]+)*(?:@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+)?$"
+              },
+              "description": "Addresses to route to the app, one routing rule each: a local part such as `inbox` (becomes `inbox@<zone>`) or a full address in the chosen zone. The install refuses an address that already has a rule.",
+              "uniqueItems": true
+            }
+          },
+          "additionalProperties": false,
+          "description": "Email the app receives through Email Routing. The install form asks for one of the account's zones; the install turns Email Routing on there if it is off, then points the listed addresses (and, with `catchAll`, every other address) at the app's Worker (the primary one, or the Worker `worker` names), which must export an `email` handler. Uninstalling removes what the install added. `{{emailDomain}}` and `{{emailZoneId}}` give the app the zone's name and id. Not for the self-deploying tier, whose own installer deploys the app.",
+          "anyOf": [
+            {
+              "required": [
+                "catchAll"
+              ],
+              "properties": {
+                "catchAll": {
+                  "const": true
+                }
+              }
+            },
+            {
+              "required": [
+                "rules"
+              ],
+              "properties": {
+                "rules": {
+                  "minItems": 1
+                }
+              }
+            }
+          ]
+        },
+        "wildcardHostname": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "One short sentence, shown where the admin assigns the hostname, on why the app needs every name under it, for example \"Each tunnel gets its own address under this hostname.\" At most 200 characters."
+            }
+          },
+          "required": [
+            "reason"
+          ],
+          "additionalProperties": false,
+          "description": "The app needs every name under one hostname (`*.<base>`) rather than one exact hostname, for example a tunnel that gives each session a name of its own. The admin assigns the base (`tunnels.example.com`) in one of the account's domains; the manager then serves the primary Worker on the base and every name under it (a proxied wildcard DNS record and Workers routes). Not for the self-deploying tier."
+        },
+        "container": {
+          "type": "object",
+          "properties": {
+            "expectedMinutes": {
+              "default": 10,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 120,
+              "description": "About how many minutes one run of this app in the sandbox Worker takes (its build, or for a self-deploying entry its installer's deploy), measured on a `standard-1` container (or `instanceType`, when set). The manager multiplies it by the container's rates to show what each install or update costs before the admin confirms it. Whole minutes, 1 to 120; defaults to 10."
+            },
+            "instanceType": {
+              "default": "standard-1",
+              "type": "string",
+              "enum": [
+                "standard-1",
+                "standard-2"
+              ],
+              "description": "The container the run uses: `standard-1` (1/2 vCPU, 4 GiB memory, 8 GB disk) or `standard-2` (1 vCPU, 6 GiB, 12 GB) for builds or installers that run out of memory or disk on the smaller one. The larger container costs more per minute, which the manager's cost estimate reflects. Defaults to `\"standard-1\"`."
+            }
+          },
+          "additionalProperties": false,
+          "description": "How a run of this app in the user's sandbox Worker is sized: the build of a `sandbox` tier entry or the installer of a `self-deploying` one (not allowed on `artifact` entries). Both fields feed the cost the manager shows before each install and update."
+        },
+        "configPatch": {
+          "minProperties": 1,
+          "description": "Changes to the app's wrangler config, applied before wrangler reads it, as a JSON merge patch (RFC 7386): an object merges key by key, null removes a key, and anything else, arrays included, replaces the value. Allowed keys: main, assets, build, services, kv_namespaces, r2_buckets, d1_databases, vars, migrations, ratelimits, ai; a section Appflare cannot install (such as `vpc_services`), or a key the packer's wrangler does not know, may be set to null, which drops it, when the app works without it. Prefer a pull request upstream and link it in a comment beside the patch; the patch is for the time until it is merged.",
+          "type": "object",
+          "properties": {
+            "main": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?![/\\\\])(?![A-Za-z]:)(?!(?:.*[/\\\\])?\\.\\.(?:[/\\\\]|$)).+$",
+              "description": "The Worker's entrypoint, relative to the config, for example `dist/index.js`; not absolute and without `..`."
+            },
+            "assets": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "directory": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "pattern": "^(?![/\\\\])(?![A-Za-z]:)(?!(?:.*[/\\\\])?\\.\\.(?:[/\\\\]|$)).+$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "binding": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "html_handling": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "not_found_handling": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "run_worker_first": {
+                      "anyOf": [
+                        {
+                          "anyOf": [
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Merged into the config's `assets`: `directory`, `binding`, `html_handling`, `not_found_handling`, `run_worker_first`; null removes a key, or `assets` itself."
+            },
+            "build": {
+              "type": "null",
+              "description": "Only null: removes the config's `build`, when `install.buildCommand` builds instead."
+            },
+            "services": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "binding": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "The binding's name, as the Worker reads it from `env`."
+                      },
+                      "service": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "The name of the Worker the binding points at."
+                      },
+                      "props": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "$ref": "#/$defs/__schema0"
+                        },
+                        "description": "Values the Worker the binding points at reads as `ctx.props` on every call through it, as wrangler sends them: a JSON object whose strings may hold the placeholders a var's default takes (`{{appUrl}}` and the others), filled in at every deploy. Only on a binding to a Worker of this entry; needs \"service-props\" in `requires`."
+                      }
+                    },
+                    "required": [
+                      "binding",
+                      "service"
+                    ],
+                    "additionalProperties": {
+                      "$ref": "#/$defs/__schema0"
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The whole list of service bindings (a merge patch replaces arrays): the config's own entries, some left out, and entries that point at a Worker of this entry. null removes them all."
+            },
+            "kv_namespaces": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "binding": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The binding's name, as the Worker reads it from `env`."
+                  }
+                },
+                "required": [
+                  "binding"
+                ],
+                "additionalProperties": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              },
+              "description": "The whole list: every binding of the config, plus new ones. A binding whose `id` is an empty string or a placeholder (`$NAME`, `${NAME}`, `{{NAME}}`, `<NAME>`) may leave it out, so the install provisions it; \"\" is refused by wrangler."
+            },
+            "r2_buckets": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "binding": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The binding's name, as the Worker reads it from `env`."
+                  }
+                },
+                "required": [
+                  "binding"
+                ],
+                "additionalProperties": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              },
+              "description": "The whole list: every binding of the config, plus new ones. A binding whose `bucket_name` is an empty string or a placeholder may leave it out."
+            },
+            "d1_databases": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "binding": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The binding's name, as the Worker reads it from `env`."
+                  }
+                },
+                "required": [
+                  "binding"
+                ],
+                "additionalProperties": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              },
+              "description": "The whole list: every binding of the config, plus new ones. A binding whose `database_id` is an empty string or a placeholder may leave it out."
+            },
+            "vars": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Vars to set or remove: text sets the var (added, or replacing the config's value), null removes it, and null for `vars` itself removes them all. Text may hold the placeholders a var's default takes (`{{appUrl}}`, `{{appUrl:<name>}}` and the others), filled in at every deploy. For a value only one Worker of the entry gets, such as the address it is reached at; a value the admin chooses is a catalog var. The admin does not see these in the app's settings."
+            },
+            "ratelimits": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The binding's name, as the Worker reads it from `env`."
+                  },
+                  "namespace_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The limit's namespace; the install gives each one of its own."
+                  },
+                  "simple": {
+                    "type": "object",
+                    "properties": {
+                      "limit": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991,
+                        "description": "Requests allowed per period."
+                      },
+                      "period": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "const": 10
+                          },
+                          {
+                            "type": "number",
+                            "const": 60
+                          }
+                        ],
+                        "description": "Seconds: 10 or 60."
+                      }
+                    },
+                    "required": [
+                      "limit",
+                      "period"
+                    ],
+                    "additionalProperties": false,
+                    "description": "The limit."
+                  }
+                },
+                "required": [
+                  "name",
+                  "namespace_id",
+                  "simple"
+                ],
+                "additionalProperties": false,
+                "description": "One rate limit binding."
+              },
+              "description": "The whole list: every rate limit of the config, unchanged, plus new ones, for a limit an upstream deploy script adds."
+            },
+            "ai": {
+              "type": "object",
+              "properties": {
+                "binding": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "The binding's name, as the Worker reads it from `env`."
+                }
+              },
+              "required": [
+                "binding"
+              ],
+              "additionalProperties": false,
+              "description": "Adds a Workers AI binding, for one an upstream deploy script adds: only `binding`, and only to a config without an `ai` binding of its own (or with this one)."
+            },
+            "migrations": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "tag": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The migration's tag, as the config gives it."
+                  }
+                },
+                "required": [
+                  "tag"
+                ],
+                "additionalProperties": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              },
+              "description": "The config's Durable Object migrations, the same list with `new_classes` renamed to `new_sqlite_classes`, which the Free plan requires."
+            },
+            "containers": {
+              "type": "null",
+              "description": "Only null: drops `containers`, which Appflare cannot install, from the config."
+            },
+            "cloudchamber": {
+              "type": "null",
+              "description": "Only null: drops `cloudchamber`, which Appflare cannot install, from the config."
+            },
+            "dispatch_namespaces": {
+              "type": "null",
+              "description": "Only null: drops `dispatch_namespaces`, which Appflare cannot install, from the config."
+            },
+            "mtls_certificates": {
+              "type": "null",
+              "description": "Only null: drops `mtls_certificates`, which Appflare cannot install, from the config."
+            },
+            "tail_consumers": {
+              "type": "null",
+              "description": "Only null: drops `tail_consumers`, which Appflare cannot install, from the config."
+            },
+            "streaming_tail_consumers": {
+              "type": "null",
+              "description": "Only null: drops `streaming_tail_consumers`, which Appflare cannot install, from the config."
+            },
+            "logfwdr": {
+              "type": "null",
+              "description": "Only null: drops `logfwdr`, which Appflare cannot install, from the config."
+            },
+            "pipelines": {
+              "type": "null",
+              "description": "Only null: drops `pipelines`, which Appflare cannot install, from the config."
+            },
+            "secrets_store_secrets": {
+              "type": "null",
+              "description": "Only null: drops `secrets_store_secrets`, which Appflare cannot install, from the config."
+            },
+            "unsafe": {
+              "type": "null",
+              "description": "Only null: drops `unsafe`, which Appflare cannot install, from the config."
+            },
+            "vpc_services": {
+              "type": "null",
+              "description": "Only null: drops `vpc_services`, which Appflare cannot install, from the config."
+            },
+            "vpc_networks": {
+              "type": "null",
+              "description": "Only null: drops `vpc_networks`, which Appflare cannot install, from the config."
+            },
+            "ai_search_namespaces": {
+              "type": "null",
+              "description": "Only null: drops `ai_search_namespaces`, which Appflare cannot install, from the config."
+            },
+            "ai_search": {
+              "type": "null",
+              "description": "Only null: drops `ai_search`, which Appflare cannot install, from the config."
+            },
+            "agent_memory": {
+              "type": "null",
+              "description": "Only null: drops `agent_memory`, which Appflare cannot install, from the config."
+            },
+            "media": {
+              "type": "null",
+              "description": "Only null: drops `media`, which Appflare cannot install, from the config."
+            },
+            "stream": {
+              "type": "null",
+              "description": "Only null: drops `stream`, which Appflare cannot install, from the config."
+            },
+            "artifacts": {
+              "type": "null",
+              "description": "Only null: drops `artifacts`, which Appflare cannot install, from the config."
+            },
+            "flagship": {
+              "type": "null",
+              "description": "Only null: drops `flagship`, which Appflare cannot install, from the config."
+            },
+            "unsafe_hello_world": {
+              "type": "null",
+              "description": "Only null: drops `unsafe_hello_world`, which Appflare cannot install, from the config."
+            },
+            "connect": {
+              "type": "null",
+              "description": "Only null: drops `connect`, which Appflare cannot install, from the config."
+            },
+            "addresses": {
+              "type": "null",
+              "description": "Only null: drops `addresses`, which Appflare cannot install, from the config."
+            },
+            "site": {
+              "type": "null",
+              "description": "Only null: drops `site`, which Appflare cannot install, from the config."
+            },
+            "pages_build_output_dir": {
+              "type": "null",
+              "description": "Only null: drops `pages_build_output_dir`, which Appflare cannot install, from the config."
+            },
+            "wasm_modules": {
+              "type": "null",
+              "description": "Only null: drops `wasm_modules`, which Appflare cannot install, from the config."
+            },
+            "text_blobs": {
+              "type": "null",
+              "description": "Only null: drops `text_blobs`, which Appflare cannot install, from the config."
+            },
+            "data_blobs": {
+              "type": "null",
+              "description": "Only null: drops `data_blobs`, which Appflare cannot install, from the config."
+            }
+          },
+          "additionalProperties": {
+            "type": "null",
+            "description": "Only null: drops a key the packer's wrangler does not know, which the packer refuses, from the config."
+          }
+        },
+        "wranglerConfigInline": {
+          "description": "The wrangler config of an app whose repository ships none, which the packer writes as `.appflare.wrangler.jsonc` where `wranglerConfig` names (for example `.appflare.wrangler.jsonc`, or `server/.appflare.wrangler.jsonc`) and reads like any other config. Not beside `configPatch` or `workers`. Prefer a pull request upstream that adds a config, and link it in a comment beside this one.",
+          "type": "object",
+          "properties": {
+            "main": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?![/\\\\])(?![A-Za-z]:)(?!(?:.*[/\\\\])?\\.\\.(?:[/\\\\]|$)).+$",
+              "description": "The Worker's entrypoint, relative to the config, for example `src/index.ts`. Omitted for a Worker of static assets only."
+            },
+            "compatibility_date": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "description": "The compatibility date the app is tested against."
+            },
+            "compatibility_flags": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": "Compatibility flags, for example `nodejs_compat`."
+            },
+            "assets": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^(?![/\\\\])(?![A-Za-z]:)(?!(?:.*[/\\\\])?\\.\\.(?:[/\\\\]|$)).+$",
+                  "description": "The directory of static assets, relative to the config, for example `dist/client`."
+                },
+                "binding": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "The binding the Worker fetches its assets through, for example `ASSETS`."
+                },
+                "html_handling": {
+                  "type": "string",
+                  "enum": [
+                    "auto-trailing-slash",
+                    "force-trailing-slash",
+                    "drop-trailing-slash",
+                    "none"
+                  ],
+                  "description": "How requests for HTML pages match files, as wrangler's `html_handling`."
+                },
+                "not_found_handling": {
+                  "type": "string",
+                  "enum": [
+                    "single-page-application",
+                    "404-page",
+                    "none"
+                  ],
+                  "description": "What a request that matches no file gets, as wrangler's `not_found_handling`."
+                },
+                "run_worker_first": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  ],
+                  "description": "Whether the Worker runs before assets are served, or for which paths."
+                }
+              },
+              "required": [
+                "directory"
+              ],
+              "additionalProperties": false,
+              "description": "Static assets the Worker serves, as wrangler's `assets`."
+            },
+            "vars": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string",
+                "minLength": 1
+              },
+              "additionalProperties": {
+                "$ref": "#/$defs/__schema1"
+              },
+              "description": "Plain variables: a string, or any JSON value."
+            },
+            "triggers": {
+              "type": "object",
+              "properties": {
+                "crons": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "description": "Cron expressions the Worker runs on."
+                }
+              },
+              "required": [
+                "crons"
+              ],
+              "additionalProperties": false,
+              "description": "Cron triggers."
+            },
+            "observability": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Whether Workers Logs record the Worker."
+                },
+                "head_sampling_rate": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "The share of requests recorded, from 0 to 1."
+                },
+                "logs": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean",
+                      "description": "Whether logs are recorded."
+                    },
+                    "head_sampling_rate": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "description": "The share of requests recorded, from 0 to 1."
+                    },
+                    "invocation_logs": {
+                      "type": "boolean",
+                      "description": "Whether a log line is recorded for each invocation."
+                    }
+                  },
+                  "additionalProperties": false,
+                  "description": "Settings for logs alone."
+                },
+                "traces": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean",
+                      "description": "Whether traces are recorded."
+                    },
+                    "head_sampling_rate": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "description": "The share of requests recorded, from 0 to 1."
+                    }
+                  },
+                  "additionalProperties": false,
+                  "description": "Settings for traces."
+                }
+              },
+              "additionalProperties": false,
+              "description": "Workers Logs and traces, as wrangler's `observability`."
+            },
+            "placement": {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "type": "string",
+                  "enum": [
+                    "off",
+                    "smart"
+                  ],
+                  "description": "`smart` for Smart Placement, or `off`."
+                },
+                "hint": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "A region to place the Worker near, which makes the placement smart."
+                }
+              },
+              "required": [
+                "mode"
+              ],
+              "additionalProperties": false,
+              "description": "Smart Placement: `smart`, with an optional region hint, or `off`."
+            },
+            "kv_namespaces": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "binding": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The binding's name, as the Worker reads it from `env`."
+                  }
+                },
+                "required": [
+                  "binding"
+                ],
+                "additionalProperties": false
+              },
+              "description": "KV namespaces, by binding only: the install creates each one."
+            },
+            "r2_buckets": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "binding": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The binding's name, as the Worker reads it from `env`."
+                  }
+                },
+                "required": [
+                  "binding"
+                ],
+                "additionalProperties": false
+              },
+              "description": "R2 buckets, by binding only: the install creates each one."
+            },
+            "d1_databases": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "binding": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The binding's name, as the Worker reads it from `env`."
+                  },
+                  "database_name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The database's name upstream; the install names its own."
+                  },
+                  "migrations_dir": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "^(?![/\\\\])(?![A-Za-z]:)(?!(?:.*[/\\\\])?\\.\\.(?:[/\\\\]|$)).+$",
+                    "description": "The directory of the database's migrations, relative to the config."
+                  },
+                  "migrations_table": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The table that records applied migrations."
+                  }
+                },
+                "required": [
+                  "binding"
+                ],
+                "additionalProperties": false
+              },
+              "description": "D1 databases, without ids: the install creates each one."
+            },
+            "queues": {
+              "type": "object",
+              "properties": {
+                "producers": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "binding": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "The binding's name, as the Worker reads it from `env`."
+                      },
+                      "queue": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "The queue's name upstream; the install creates one of its own."
+                      },
+                      "delivery_delay": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991,
+                        "description": "Seconds before a message sent is delivered."
+                      }
+                    },
+                    "required": [
+                      "binding",
+                      "queue"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "description": "Queues the Worker sends to."
+                },
+                "consumers": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "queue": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "The queue consumed, by its name upstream."
+                      },
+                      "max_batch_size": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991,
+                        "description": "Most messages in a batch."
+                      },
+                      "max_batch_timeout": {
+                        "type": "number",
+                        "minimum": 0,
+                        "description": "Most seconds to wait for a batch to fill."
+                      },
+                      "max_retries": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991,
+                        "description": "Retries of a failed message."
+                      },
+                      "dead_letter_queue": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "The queue failed messages go to, by its name upstream."
+                      },
+                      "max_concurrency": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991,
+                        "description": "Most batches consumed at once."
+                      },
+                      "retry_delay": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991,
+                        "description": "Seconds before a message is retried."
+                      }
+                    },
+                    "required": [
+                      "queue"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "description": "Queues the Worker consumes."
+                }
+              },
+              "additionalProperties": false,
+              "description": "Queue producers and consumers; the install creates each queue."
+            },
+            "durable_objects": {
+              "type": "object",
+              "properties": {
+                "bindings": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "The binding's name, as the Worker reads it from `env`."
+                      },
+                      "class_name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "The class, created by this config's migrations."
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "class_name"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "description": "Durable Object bindings, each to a class of this Worker."
+                }
+              },
+              "required": [
+                "bindings"
+              ],
+              "additionalProperties": false,
+              "description": "Durable Object bindings."
+            },
+            "migrations": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "tag": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The migration's tag, unique within the list."
+                  },
+                  "new_sqlite_classes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "A Durable Object class the Worker exports."
+                    },
+                    "description": "Classes this migration creates, SQLite-backed."
+                  },
+                  "renamed_classes": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "from": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "The class's name before."
+                        },
+                        "to": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "The class's name after."
+                        }
+                      },
+                      "required": [
+                        "from",
+                        "to"
+                      ],
+                      "additionalProperties": false,
+                      "description": "One class renamed."
+                    },
+                    "description": "Classes this migration renames."
+                  },
+                  "deleted_classes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "A Durable Object class the Worker exports."
+                    },
+                    "description": "Classes this migration deletes, with their data."
+                  }
+                },
+                "required": [
+                  "tag"
+                ],
+                "additionalProperties": false,
+                "description": "One Durable Object migration; new classes are SQLite-backed."
+              },
+              "description": "Durable Object migrations, in order."
+            },
+            "workflows": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "binding": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The binding's name, as the Worker reads it from `env`."
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The Workflow's name."
+                  },
+                  "class_name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The Workflow class the Worker exports."
+                  }
+                },
+                "required": [
+                  "binding",
+                  "name",
+                  "class_name"
+                ],
+                "additionalProperties": false
+              },
+              "description": "Workflows defined by this Worker."
+            },
+            "services": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "binding": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The binding's name, as the Worker reads it from `env`."
+                  },
+                  "service": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "This Worker, or another Worker of the entry, by the name the packer gives it (`install.workerName`, or `<workerName>-<name>`)."
+                  },
+                  "entrypoint": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The named entrypoint the binding calls."
+                  }
+                },
+                "required": [
+                  "binding",
+                  "service"
+                ],
+                "additionalProperties": false
+              },
+              "description": "Service bindings to this Worker or another Worker of the entry."
+            },
+            "ai": {
+              "type": "object",
+              "properties": {
+                "binding": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "The binding's name, as the Worker reads it from `env`."
+                }
+              },
+              "required": [
+                "binding"
+              ],
+              "additionalProperties": false,
+              "description": "The Workers AI binding."
+            },
+            "browser": {
+              "type": "object",
+              "properties": {
+                "binding": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "The binding's name, as the Worker reads it from `env`."
+                }
+              },
+              "required": [
+                "binding"
+              ],
+              "additionalProperties": false,
+              "description": "The Browser Rendering binding."
+            },
+            "images": {
+              "type": "object",
+              "properties": {
+                "binding": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "The binding's name, as the Worker reads it from `env`."
+                }
+              },
+              "required": [
+                "binding"
+              ],
+              "additionalProperties": false,
+              "description": "The Images binding."
+            },
+            "version_metadata": {
+              "type": "object",
+              "properties": {
+                "binding": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "The binding's name, as the Worker reads it from `env`."
+                }
+              },
+              "required": [
+                "binding"
+              ],
+              "additionalProperties": false,
+              "description": "The version metadata binding."
+            }
+          },
+          "required": [
+            "compatibility_date"
+          ],
+          "additionalProperties": false
+        },
+        "toolchains": {
+          "minItems": 1,
+          "maxItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "rust"
+            ]
+          },
+          "description": "Toolchains beyond Node.js the build needs. `\"rust\"`: catalog CI installs a pinned Rust toolchain with the `wasm32-unknown-unknown` target before installing and building, for workers-rs apps (`worker-build`). Artifact tier only: the sandbox image that builds sandbox and self-deploying entries in an account has no Rust."
+        },
+        "selfDeploying": {
+          "type": "object",
+          "properties": {
+            "tool": {
+              "type": "string",
+              "enum": [
+                "alchemy"
+              ],
+              "description": "The installer the app ships. `\"alchemy\"`: an Alchemy stack, which gets the app's token as `CLOUDFLARE_API_TOKEN` and the account id as `CLOUDFLARE_ACCOUNT_ID`."
+            },
+            "deployCommand": {
+              "minItems": 1,
+              "maxItems": 32,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9@%+,./:=_-]+$"
+              },
+              "description": "The command that deploys (or updates) the app, as argv, run at the root of the checkout after the dependency install and `install.buildCommand`, for example `[\"pnpm\", \"alchemy\", \"deploy\", \"--yes\"]`. The sandbox Worker appends the stage option and the stage (`--stage <stage>` for Alchemy). It must not prompt: it runs without a terminal. A list of words rather than one string, so the words run exactly as listed."
+            },
+            "destroyCommand": {
+              "minItems": 1,
+              "maxItems": 32,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9@%+,./:=_-]+$"
+              },
+              "description": "The command that deletes everything the deploy command created, as argv, for example `[\"pnpm\", \"alchemy\", \"destroy\", \"--yes\"]`. Uninstalling runs it; Appflare never deletes the app's resources itself."
+            },
+            "workerNames": {
+              "minItems": 1,
+              "maxItems": 8,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]*\\{\\{stage\\}\\}[a-z0-9-]*$"
+              },
+              "description": "The Workers the deploy command creates, with `{{stage}}` for the install's stage, for example `[\"open-seo-{{stage}}\", \"open-seo-{{stage}}-audit\"]`. The first one serves the app: its workers.dev URL is the install's URL and the health check probes it. After each deploy Appflare reads these Workers and records what they bind."
+            }
+          },
+          "required": [
+            "tool",
+            "deployCommand",
+            "destroyCommand",
+            "workerNames"
+          ],
+          "additionalProperties": false,
+          "description": "How the sandbox Worker runs the app's own installer (self-deploying tier only). The admin creates a Cloudflare API token from `tokenPermissions` for it. The installer keeps its state in the account (for Alchemy, its `alchemy-state-store` Worker), so every run sees what earlier runs deployed."
+        },
+        "workers": {
+          "minItems": 2,
+          "maxItems": 24,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 24,
+                "pattern": "^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$",
+                "description": "The Worker's name within the entry, for example `api`. The primary Worker installs under the install's Worker name; every other one as `<install Worker name>-<name>`. Placeholders name it too: `{{appUrl:<name>}}`, `{{workerUrl:<name>}}`, `{{workerName:<name>}}` and the hostname forms."
+              },
+              "wranglerConfig": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Path of this Worker's wrangler config in the repository."
+              },
+              "buildCommand": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 256,
+                    "pattern": "^[A-Za-z0-9@%+,./:=_ -]+$"
+                  },
+                  {
+                    "minItems": 1,
+                    "maxItems": 8,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 256,
+                      "pattern": "^[A-Za-z0-9@%+,./:=_ -]+$"
+                    }
+                  }
+                ],
+                "description": "The command, or the commands in order, the packer runs at the root of the checkout for this Worker, after `install.buildCommand` (when set) and before bundling it. Same rules as `install.buildCommand`."
+              },
+              "configPatch": {
+                "minProperties": 1,
+                "description": "Changes to this Worker's wrangler config, applied before wrangler reads it; the same rules as `install.configPatch`.",
+                "type": "object",
+                "properties": {
+                  "main": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "^(?![/\\\\])(?![A-Za-z]:)(?!(?:.*[/\\\\])?\\.\\.(?:[/\\\\]|$)).+$",
+                    "description": "The Worker's entrypoint, relative to the config, for example `dist/index.js`; not absolute and without `..`."
+                  },
+                  "assets": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "directory": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^(?![/\\\\])(?![A-Za-z]:)(?!(?:.*[/\\\\])?\\.\\.(?:[/\\\\]|$)).+$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "binding": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "html_handling": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "not_found_handling": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "run_worker_first": {
+                            "anyOf": [
+                              {
+                                "anyOf": [
+                                  {
+                                    "type": "boolean"
+                                  },
+                                  {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Merged into the config's `assets`: `directory`, `binding`, `html_handling`, `not_found_handling`, `run_worker_first`; null removes a key, or `assets` itself."
+                  },
+                  "build": {
+                    "type": "null",
+                    "description": "Only null: removes the config's `build`, when `install.buildCommand` builds instead."
+                  },
+                  "services": {
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "binding": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "The binding's name, as the Worker reads it from `env`."
+                            },
+                            "service": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "The name of the Worker the binding points at."
+                            },
+                            "props": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "$ref": "#/$defs/__schema0"
+                              },
+                              "description": "Values the Worker the binding points at reads as `ctx.props` on every call through it, as wrangler sends them: a JSON object whose strings may hold the placeholders a var's default takes (`{{appUrl}}` and the others), filled in at every deploy. Only on a binding to a Worker of this entry; needs \"service-props\" in `requires`."
+                            }
+                          },
+                          "required": [
+                            "binding",
+                            "service"
+                          ],
+                          "additionalProperties": {
+                            "$ref": "#/$defs/__schema0"
+                          }
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The whole list of service bindings (a merge patch replaces arrays): the config's own entries, some left out, and entries that point at a Worker of this entry. null removes them all."
+                  },
+                  "kv_namespaces": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "binding": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "The binding's name, as the Worker reads it from `env`."
+                        }
+                      },
+                      "required": [
+                        "binding"
+                      ],
+                      "additionalProperties": {
+                        "$ref": "#/$defs/__schema0"
+                      }
+                    },
+                    "description": "The whole list: every binding of the config, plus new ones. A binding whose `id` is an empty string or a placeholder (`$NAME`, `${NAME}`, `{{NAME}}`, `<NAME>`) may leave it out, so the install provisions it; \"\" is refused by wrangler."
+                  },
+                  "r2_buckets": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "binding": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "The binding's name, as the Worker reads it from `env`."
+                        }
+                      },
+                      "required": [
+                        "binding"
+                      ],
+                      "additionalProperties": {
+                        "$ref": "#/$defs/__schema0"
+                      }
+                    },
+                    "description": "The whole list: every binding of the config, plus new ones. A binding whose `bucket_name` is an empty string or a placeholder may leave it out."
+                  },
+                  "d1_databases": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "binding": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "The binding's name, as the Worker reads it from `env`."
+                        }
+                      },
+                      "required": [
+                        "binding"
+                      ],
+                      "additionalProperties": {
+                        "$ref": "#/$defs/__schema0"
+                      }
+                    },
+                    "description": "The whole list: every binding of the config, plus new ones. A binding whose `database_id` is an empty string or a placeholder may leave it out."
+                  },
+                  "vars": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Vars to set or remove: text sets the var (added, or replacing the config's value), null removes it, and null for `vars` itself removes them all. Text may hold the placeholders a var's default takes (`{{appUrl}}`, `{{appUrl:<name>}}` and the others), filled in at every deploy. For a value only one Worker of the entry gets, such as the address it is reached at; a value the admin chooses is a catalog var. The admin does not see these in the app's settings."
+                  },
+                  "ratelimits": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "The binding's name, as the Worker reads it from `env`."
+                        },
+                        "namespace_id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "The limit's namespace; the install gives each one of its own."
+                        },
+                        "simple": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 9007199254740991,
+                              "description": "Requests allowed per period."
+                            },
+                            "period": {
+                              "anyOf": [
+                                {
+                                  "type": "number",
+                                  "const": 10
+                                },
+                                {
+                                  "type": "number",
+                                  "const": 60
+                                }
+                              ],
+                              "description": "Seconds: 10 or 60."
+                            }
+                          },
+                          "required": [
+                            "limit",
+                            "period"
+                          ],
+                          "additionalProperties": false,
+                          "description": "The limit."
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "namespace_id",
+                        "simple"
+                      ],
+                      "additionalProperties": false,
+                      "description": "One rate limit binding."
+                    },
+                    "description": "The whole list: every rate limit of the config, unchanged, plus new ones, for a limit an upstream deploy script adds."
+                  },
+                  "ai": {
+                    "type": "object",
+                    "properties": {
+                      "binding": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "The binding's name, as the Worker reads it from `env`."
+                      }
+                    },
+                    "required": [
+                      "binding"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Adds a Workers AI binding, for one an upstream deploy script adds: only `binding`, and only to a config without an `ai` binding of its own (or with this one)."
+                  },
+                  "migrations": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "tag": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "The migration's tag, as the config gives it."
+                        }
+                      },
+                      "required": [
+                        "tag"
+                      ],
+                      "additionalProperties": {
+                        "$ref": "#/$defs/__schema0"
+                      }
+                    },
+                    "description": "The config's Durable Object migrations, the same list with `new_classes` renamed to `new_sqlite_classes`, which the Free plan requires."
+                  },
+                  "containers": {
+                    "type": "null",
+                    "description": "Only null: drops `containers`, which Appflare cannot install, from the config."
+                  },
+                  "cloudchamber": {
+                    "type": "null",
+                    "description": "Only null: drops `cloudchamber`, which Appflare cannot install, from the config."
+                  },
+                  "dispatch_namespaces": {
+                    "type": "null",
+                    "description": "Only null: drops `dispatch_namespaces`, which Appflare cannot install, from the config."
+                  },
+                  "mtls_certificates": {
+                    "type": "null",
+                    "description": "Only null: drops `mtls_certificates`, which Appflare cannot install, from the config."
+                  },
+                  "tail_consumers": {
+                    "type": "null",
+                    "description": "Only null: drops `tail_consumers`, which Appflare cannot install, from the config."
+                  },
+                  "streaming_tail_consumers": {
+                    "type": "null",
+                    "description": "Only null: drops `streaming_tail_consumers`, which Appflare cannot install, from the config."
+                  },
+                  "logfwdr": {
+                    "type": "null",
+                    "description": "Only null: drops `logfwdr`, which Appflare cannot install, from the config."
+                  },
+                  "pipelines": {
+                    "type": "null",
+                    "description": "Only null: drops `pipelines`, which Appflare cannot install, from the config."
+                  },
+                  "secrets_store_secrets": {
+                    "type": "null",
+                    "description": "Only null: drops `secrets_store_secrets`, which Appflare cannot install, from the config."
+                  },
+                  "unsafe": {
+                    "type": "null",
+                    "description": "Only null: drops `unsafe`, which Appflare cannot install, from the config."
+                  },
+                  "vpc_services": {
+                    "type": "null",
+                    "description": "Only null: drops `vpc_services`, which Appflare cannot install, from the config."
+                  },
+                  "vpc_networks": {
+                    "type": "null",
+                    "description": "Only null: drops `vpc_networks`, which Appflare cannot install, from the config."
+                  },
+                  "ai_search_namespaces": {
+                    "type": "null",
+                    "description": "Only null: drops `ai_search_namespaces`, which Appflare cannot install, from the config."
+                  },
+                  "ai_search": {
+                    "type": "null",
+                    "description": "Only null: drops `ai_search`, which Appflare cannot install, from the config."
+                  },
+                  "agent_memory": {
+                    "type": "null",
+                    "description": "Only null: drops `agent_memory`, which Appflare cannot install, from the config."
+                  },
+                  "media": {
+                    "type": "null",
+                    "description": "Only null: drops `media`, which Appflare cannot install, from the config."
+                  },
+                  "stream": {
+                    "type": "null",
+                    "description": "Only null: drops `stream`, which Appflare cannot install, from the config."
+                  },
+                  "artifacts": {
+                    "type": "null",
+                    "description": "Only null: drops `artifacts`, which Appflare cannot install, from the config."
+                  },
+                  "flagship": {
+                    "type": "null",
+                    "description": "Only null: drops `flagship`, which Appflare cannot install, from the config."
+                  },
+                  "unsafe_hello_world": {
+                    "type": "null",
+                    "description": "Only null: drops `unsafe_hello_world`, which Appflare cannot install, from the config."
+                  },
+                  "connect": {
+                    "type": "null",
+                    "description": "Only null: drops `connect`, which Appflare cannot install, from the config."
+                  },
+                  "addresses": {
+                    "type": "null",
+                    "description": "Only null: drops `addresses`, which Appflare cannot install, from the config."
+                  },
+                  "site": {
+                    "type": "null",
+                    "description": "Only null: drops `site`, which Appflare cannot install, from the config."
+                  },
+                  "pages_build_output_dir": {
+                    "type": "null",
+                    "description": "Only null: drops `pages_build_output_dir`, which Appflare cannot install, from the config."
+                  },
+                  "wasm_modules": {
+                    "type": "null",
+                    "description": "Only null: drops `wasm_modules`, which Appflare cannot install, from the config."
+                  },
+                  "text_blobs": {
+                    "type": "null",
+                    "description": "Only null: drops `text_blobs`, which Appflare cannot install, from the config."
+                  },
+                  "data_blobs": {
+                    "type": "null",
+                    "description": "Only null: drops `data_blobs`, which Appflare cannot install, from the config."
+                  }
+                },
+                "additionalProperties": {
+                  "type": "null",
+                  "description": "Only null: drops a key the packer's wrangler does not know, which the packer refuses, from the config."
+                }
+              },
+              "wranglerConfigInline": {
+                "description": "This Worker's wrangler config, for a repository that ships none; the same rules as `install.wranglerConfigInline`, and `wranglerConfig` names where it is written.",
+                "type": "object",
+                "properties": {
+                  "main": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "^(?![/\\\\])(?![A-Za-z]:)(?!(?:.*[/\\\\])?\\.\\.(?:[/\\\\]|$)).+$",
+                    "description": "The Worker's entrypoint, relative to the config, for example `src/index.ts`. Omitted for a Worker of static assets only."
+                  },
+                  "compatibility_date": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                    "description": "The compatibility date the app is tested against."
+                  },
+                  "compatibility_flags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "description": "Compatibility flags, for example `nodejs_compat`."
+                  },
+                  "assets": {
+                    "type": "object",
+                    "properties": {
+                      "directory": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "^(?![/\\\\])(?![A-Za-z]:)(?!(?:.*[/\\\\])?\\.\\.(?:[/\\\\]|$)).+$",
+                        "description": "The directory of static assets, relative to the config, for example `dist/client`."
+                      },
+                      "binding": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "The binding the Worker fetches its assets through, for example `ASSETS`."
+                      },
+                      "html_handling": {
+                        "type": "string",
+                        "enum": [
+                          "auto-trailing-slash",
+                          "force-trailing-slash",
+                          "drop-trailing-slash",
+                          "none"
+                        ],
+                        "description": "How requests for HTML pages match files, as wrangler's `html_handling`."
+                      },
+                      "not_found_handling": {
+                        "type": "string",
+                        "enum": [
+                          "single-page-application",
+                          "404-page",
+                          "none"
+                        ],
+                        "description": "What a request that matches no file gets, as wrangler's `not_found_handling`."
+                      },
+                      "run_worker_first": {
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          }
+                        ],
+                        "description": "Whether the Worker runs before assets are served, or for which paths."
+                      }
+                    },
+                    "required": [
+                      "directory"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Static assets the Worker serves, as wrangler's `assets`."
+                  },
+                  "vars": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "additionalProperties": {
+                      "$ref": "#/$defs/__schema1"
+                    },
+                    "description": "Plain variables: a string, or any JSON value."
+                  },
+                  "triggers": {
+                    "type": "object",
+                    "properties": {
+                      "crons": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "description": "Cron expressions the Worker runs on."
+                      }
+                    },
+                    "required": [
+                      "crons"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Cron triggers."
+                  },
+                  "observability": {
+                    "type": "object",
+                    "properties": {
+                      "enabled": {
+                        "type": "boolean",
+                        "description": "Whether Workers Logs record the Worker."
+                      },
+                      "head_sampling_rate": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "The share of requests recorded, from 0 to 1."
+                      },
+                      "logs": {
+                        "type": "object",
+                        "properties": {
+                          "enabled": {
+                            "type": "boolean",
+                            "description": "Whether logs are recorded."
+                          },
+                          "head_sampling_rate": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1,
+                            "description": "The share of requests recorded, from 0 to 1."
+                          },
+                          "invocation_logs": {
+                            "type": "boolean",
+                            "description": "Whether a log line is recorded for each invocation."
+                          }
+                        },
+                        "additionalProperties": false,
+                        "description": "Settings for logs alone."
+                      },
+                      "traces": {
+                        "type": "object",
+                        "properties": {
+                          "enabled": {
+                            "type": "boolean",
+                            "description": "Whether traces are recorded."
+                          },
+                          "head_sampling_rate": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1,
+                            "description": "The share of requests recorded, from 0 to 1."
+                          }
+                        },
+                        "additionalProperties": false,
+                        "description": "Settings for traces."
+                      }
+                    },
+                    "additionalProperties": false,
+                    "description": "Workers Logs and traces, as wrangler's `observability`."
+                  },
+                  "placement": {
+                    "type": "object",
+                    "properties": {
+                      "mode": {
+                        "type": "string",
+                        "enum": [
+                          "off",
+                          "smart"
+                        ],
+                        "description": "`smart` for Smart Placement, or `off`."
+                      },
+                      "hint": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "A region to place the Worker near, which makes the placement smart."
+                      }
+                    },
+                    "required": [
+                      "mode"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Smart Placement: `smart`, with an optional region hint, or `off`."
+                  },
+                  "kv_namespaces": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "binding": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "The binding's name, as the Worker reads it from `env`."
+                        }
+                      },
+                      "required": [
+                        "binding"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "description": "KV namespaces, by binding only: the install creates each one."
+                  },
+                  "r2_buckets": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "binding": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "The binding's name, as the Worker reads it from `env`."
+                        }
+                      },
+                      "required": [
+                        "binding"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "description": "R2 buckets, by binding only: the install creates each one."
+                  },
+                  "d1_databases": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "binding": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "The binding's name, as the Worker reads it from `env`."
+                        },
+                        "database_name": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "The database's name upstream; the install names its own."
+                        },
+                        "migrations_dir": {
+                          "type": "string",
+                          "minLength": 1,
+                          "pattern": "^(?![/\\\\])(?![A-Za-z]:)(?!(?:.*[/\\\\])?\\.\\.(?:[/\\\\]|$)).+$",
+                          "description": "The directory of the database's migrations, relative to the config."
+                        },
+                        "migrations_table": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "The table that records applied migrations."
+                        }
+                      },
+                      "required": [
+                        "binding"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "description": "D1 databases, without ids: the install creates each one."
+                  },
+                  "queues": {
+                    "type": "object",
+                    "properties": {
+                      "producers": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "binding": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "The binding's name, as the Worker reads it from `env`."
+                            },
+                            "queue": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "The queue's name upstream; the install creates one of its own."
+                            },
+                            "delivery_delay": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991,
+                              "description": "Seconds before a message sent is delivered."
+                            }
+                          },
+                          "required": [
+                            "binding",
+                            "queue"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "description": "Queues the Worker sends to."
+                      },
+                      "consumers": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "queue": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "The queue consumed, by its name upstream."
+                            },
+                            "max_batch_size": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 9007199254740991,
+                              "description": "Most messages in a batch."
+                            },
+                            "max_batch_timeout": {
+                              "type": "number",
+                              "minimum": 0,
+                              "description": "Most seconds to wait for a batch to fill."
+                            },
+                            "max_retries": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991,
+                              "description": "Retries of a failed message."
+                            },
+                            "dead_letter_queue": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "The queue failed messages go to, by its name upstream."
+                            },
+                            "max_concurrency": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 9007199254740991,
+                              "description": "Most batches consumed at once."
+                            },
+                            "retry_delay": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991,
+                              "description": "Seconds before a message is retried."
+                            }
+                          },
+                          "required": [
+                            "queue"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "description": "Queues the Worker consumes."
+                      }
+                    },
+                    "additionalProperties": false,
+                    "description": "Queue producers and consumers; the install creates each queue."
+                  },
+                  "durable_objects": {
+                    "type": "object",
+                    "properties": {
+                      "bindings": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "The binding's name, as the Worker reads it from `env`."
+                            },
+                            "class_name": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "The class, created by this config's migrations."
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "class_name"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "description": "Durable Object bindings, each to a class of this Worker."
+                      }
+                    },
+                    "required": [
+                      "bindings"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Durable Object bindings."
+                  },
+                  "migrations": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "tag": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "The migration's tag, unique within the list."
+                        },
+                        "new_sqlite_classes": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "A Durable Object class the Worker exports."
+                          },
+                          "description": "Classes this migration creates, SQLite-backed."
+                        },
+                        "renamed_classes": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "from": {
+                                "type": "string",
+                                "minLength": 1,
+                                "description": "The class's name before."
+                              },
+                              "to": {
+                                "type": "string",
+                                "minLength": 1,
+                                "description": "The class's name after."
+                              }
+                            },
+                            "required": [
+                              "from",
+                              "to"
+                            ],
+                            "additionalProperties": false,
+                            "description": "One class renamed."
+                          },
+                          "description": "Classes this migration renames."
+                        },
+                        "deleted_classes": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "A Durable Object class the Worker exports."
+                          },
+                          "description": "Classes this migration deletes, with their data."
+                        }
+                      },
+                      "required": [
+                        "tag"
+                      ],
+                      "additionalProperties": false,
+                      "description": "One Durable Object migration; new classes are SQLite-backed."
+                    },
+                    "description": "Durable Object migrations, in order."
+                  },
+                  "workflows": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "binding": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "The binding's name, as the Worker reads it from `env`."
+                        },
+                        "name": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "The Workflow's name."
+                        },
+                        "class_name": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "The Workflow class the Worker exports."
+                        }
+                      },
+                      "required": [
+                        "binding",
+                        "name",
+                        "class_name"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "description": "Workflows defined by this Worker."
+                  },
+                  "services": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "binding": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "The binding's name, as the Worker reads it from `env`."
+                        },
+                        "service": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "This Worker, or another Worker of the entry, by the name the packer gives it (`install.workerName`, or `<workerName>-<name>`)."
+                        },
+                        "entrypoint": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "The named entrypoint the binding calls."
+                        }
+                      },
+                      "required": [
+                        "binding",
+                        "service"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "description": "Service bindings to this Worker or another Worker of the entry."
+                  },
+                  "ai": {
+                    "type": "object",
+                    "properties": {
+                      "binding": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "The binding's name, as the Worker reads it from `env`."
+                      }
+                    },
+                    "required": [
+                      "binding"
+                    ],
+                    "additionalProperties": false,
+                    "description": "The Workers AI binding."
+                  },
+                  "browser": {
+                    "type": "object",
+                    "properties": {
+                      "binding": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "The binding's name, as the Worker reads it from `env`."
+                      }
+                    },
+                    "required": [
+                      "binding"
+                    ],
+                    "additionalProperties": false,
+                    "description": "The Browser Rendering binding."
+                  },
+                  "images": {
+                    "type": "object",
+                    "properties": {
+                      "binding": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "The binding's name, as the Worker reads it from `env`."
+                      }
+                    },
+                    "required": [
+                      "binding"
+                    ],
+                    "additionalProperties": false,
+                    "description": "The Images binding."
+                  },
+                  "version_metadata": {
+                    "type": "object",
+                    "properties": {
+                      "binding": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "The binding's name, as the Worker reads it from `env`."
+                      }
+                    },
+                    "required": [
+                      "binding"
+                    ],
+                    "additionalProperties": false,
+                    "description": "The version metadata binding."
+                  }
+                },
+                "required": [
+                  "compatibility_date"
+                ],
+                "additionalProperties": false
+              },
+              "primary": {
+                "default": false,
+                "description": "The Worker that answers the app's address and its health check. Exactly one Worker is primary, and its `wranglerConfig` is `install.wranglerConfig`.",
+                "type": "boolean"
+              },
+              "workersDev": {
+                "default": true,
+                "description": "Whether this Worker answers on its workers.dev URL (on unless set to `false`). Set `false` for a Worker only the entry's other Workers call, through a service binding or a Durable Object binding, and that must not be reachable from the internet (for example one that trusts identity headers set by the primary Worker). It then has no public URL and no version previews, and updates skip its preview check. The primary Worker always keeps its workers.dev URL: it is the app's address and health check until a custom domain takes over.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "wranglerConfig"
+            ],
+            "additionalProperties": false,
+            "description": "One Worker of an entry that installs as several Workers."
+          },
+          "description": "For an app that installs as several Workers deployed together (for example an API and a web front end), 2 to 24 of them: each Worker's name, wrangler config and optional build command. Exactly one is `primary`: it answers the app's address and health check, and its `wranglerConfig` is `install.wranglerConfig`. Service bindings between these Workers, Durable Object bindings to a class in another of them, and Workflow bindings to a Workflow another of them defines are pointed at the installed Workers; bindings of the same name share one resource. Artifact tier only. On Workers Free a job for more than three Workers can take longer: the manager waits 5 minutes whenever the job needs a fresh allowance of the 50 requests Cloudflare gives it at a time."
+        }
+      },
+      "required": [
+        "packageManager",
+        "wranglerConfig"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "not": {
+                "required": [
+                  "container"
+                ]
+              }
+            },
+            {
+              "required": [
+                "tier"
+              ],
+              "properties": {
+                "tier": {
+                  "enum": [
+                    "sandbox",
+                    "self-deploying"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "required": [
+                "tier",
+                "selfDeploying"
+              ],
+              "properties": {
+                "tier": {
+                  "const": "self-deploying"
+                }
+              }
+            },
+            {
+              "not": {
+                "required": [
+                  "selfDeploying"
+                ]
+              },
+              "properties": {
+                "tier": {
+                  "not": {
+                    "const": "self-deploying"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "not": {
+                "required": [
+                  "emailRouting"
+                ]
+              }
+            },
+            {
+              "properties": {
+                "tier": {
+                  "not": {
+                    "const": "self-deploying"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "not": {
+                "required": [
+                  "installDirs"
+                ]
+              }
+            },
+            {
+              "properties": {
+                "tier": {
+                  "not": {
+                    "const": "self-deploying"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "not": {
+                "required": [
+                  "workers"
+                ]
+              }
+            },
+            {
+              "properties": {
+                "tier": {
+                  "const": "artifact"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "not": {
+                "required": [
+                  "configPatch"
+                ]
+              }
+            },
+            {
+              "not": {
+                "required": [
+                  "workers"
+                ]
+              },
+              "properties": {
+                "tier": {
+                  "not": {
+                    "const": "self-deploying"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "not": {
+                "required": [
+                  "wranglerConfigInline"
+                ]
+              }
+            },
+            {
+              "not": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "workers"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "configPatch"
+                    ]
+                  }
+                ]
+              },
+              "properties": {
+                "tier": {
+                  "not": {
+                    "const": "self-deploying"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "not": {
+                "required": [
+                  "toolchains"
+                ]
+              }
+            },
+            {
+              "properties": {
+                "tier": {
+                  "const": "artifact"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "not": {
+                "required": [
+                  "wildcardHostname"
+                ]
+              }
+            },
+            {
+              "properties": {
+                "tier": {
+                  "not": {
+                    "const": "self-deploying"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "not": {
+                "required": [
+                  "buildEnv"
+                ]
+              }
+            },
+            {
+              "properties": {
+                "tier": {
+                  "not": {
+                    "const": "self-deploying"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "not": {
+                "required": [
+                  "emailRouting"
+                ]
+              }
+            },
+            {
+              "properties": {
+                "emailRouting": {
+                  "not": {
+                    "required": [
+                      "worker"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "required": [
+                "workers"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "plan": {
+      "type": "string",
+      "enum": [
+        "free",
+        "paid"
+      ],
+      "description": "The Cloudflare Workers plan the app needs: `\"free\"` when it runs on Workers Free, `\"paid\"` when it needs Workers Paid. An entry with Pipelines must say `\"paid\"`."
+    },
+    "requires": {
+      "default": [],
+      "description": "Account capabilities the app needs beyond the free Workers baseline. `\"access\"`: the app goes with Cloudflare Access. The account needs a Zero Trust organization only while the app is protected (always, with `access.mode: \"required\"`), and the value keeps the entry away from managers too old to protect apps. Required with `access.mode: \"required\"` and whenever a var's default uses an Access placeholder. Some values name a feature of Appflare instead, which keeps the entry away from managers too old for it: `\"secret-keys\"` (a secret with a `key`), `\"service-props\"` (`props` on a service binding), `\"config-patch-values\"` (a config patch that sets var text or adds Workers AI), `\"email-worker\"` (`install.emailRouting.worker`), `\"email-placeholders\"` (`{{emailDomain}}` or `{{emailZoneId}}` anywhere, or any placeholder in an object key of a JSON var or of service binding `props`) and `\"hyperdrive-caching\"` (`caching` on a Hyperdrive binding).",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "r2",
+          "zone",
+          "email-routing",
+          "workers-ai",
+          "browser-rendering",
+          "containers",
+          "analytics-engine",
+          "access",
+          "secret-keys",
+          "service-props",
+          "config-patch-values",
+          "email-worker",
+          "email-placeholders",
+          "hyperdrive-caching"
+        ]
+      }
+    },
+    "secrets": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The name the Worker reads the secret by, exactly as the app's code spells it, for example `ADMIN_PASSWORD`."
+          },
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+            "description": "What Appflare calls the secret, when it is not its `name`: unique among the entry's secrets, for an entry of several Workers where two secrets give different Workers a value under one name, for example `GITHUB_CLIENT_ID` for the `CLIENT_ID` of the `github` Worker. The forms, the install's record and `derive.from`, seed params and a Pipelines sink's `tokenSecret` use the key; the Worker still reads the secret by `name`. Defaults to `name`. An entry with a key other than its secret's name lists \"secret-keys\" in `requires`, so managers that do not know keys leave it out. Not for self-deploying entries. Changing a released secret's key makes installs ask for its value again."
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "description": "What the install and settings forms call the secret, in plain words, for example `Admin password`."
+          },
+          "help": {
+            "type": "string",
+            "description": "A sentence or two shown under the field: what the value is for, or where to find it."
+          },
+          "link": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 40,
+                "pattern": "^\\S(?:[^\\r\\n]*\\S)?$",
+                "description": "What the link says, in a few plain words (at most 40 characters), for example `Get a key` or `Create a bot`. The forms add the mark of a link that opens in a new tab."
+              },
+              "url": {
+                "type": "string",
+                "maxLength": 500,
+                "pattern": "^https:\\/\\/[^\\s\\x00-\\x1f\\x7f/?#@\\\\]+(?:[/?#][^\\s\\x00-\\x1f\\x7f\\\\]*)?$",
+                "description": "Where the link goes, as an https:// URL without a user name or password, at most 500 characters, for example `https://openrouter.ai/settings/keys`."
+              }
+            },
+            "required": [
+              "label",
+              "url"
+            ],
+            "additionalProperties": false,
+            "description": "A link shown beside the field in the install and settings forms, opened in a new tab: where to get the value, such as the page that creates an API key. Help text is shown as plain text, so put the link here rather than in `help`."
+          },
+          "generate": {
+            "type": "string",
+            "enum": [
+              "password",
+              "vapid-private-key",
+              "base64-key-32"
+            ],
+            "description": "The install form fills in a value instead of asking for one. `\"password\"`: a random value the admin can copy, regenerate, or replace. `\"vapid-private-key\"`: a new Web Push (VAPID) private key, a P-256 private key as the unpadded base64url of its raw 32 bytes (the form web-push libraries take), and the manager refuses a value that is not one. Pair it with a `derive: { method: \"vapid-public-key\" }` var for the public key. `\"base64-key-32\"`: 32 random bytes as padded base64 (44 characters), for an app that reads a raw 256-bit key; the manager refuses a value that does not decode to 32 bytes."
+          },
+          "optional": {
+            "default": false,
+            "description": "The app works without this secret. The install form leaves it unset unless the admin chooses \"Set now\", updates never ask for it, and the app's settings can remove it. Not allowed on self-deploying entries.",
+            "type": "boolean"
+          },
+          "derive": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The secret whose value this one is computed from, by its `key` (its `name` when it has no key). It must be another secret of this manifest, not itself derived, not optional."
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "bcrypt",
+                  "vapid-public-key"
+                ],
+                "description": "How the value is computed. `\"bcrypt\"`: a bcrypt hash (`$2b$`, cost 10) of the source value, for apps that check a password against a stored hash. `\"vapid-public-key\"`: the Web Push (VAPID) public key of a source secret with `generate: \"vapid-private-key\"`, as the unpadded base64url of its 65-byte uncompressed point."
+              }
+            },
+            "required": [
+              "from",
+              "method"
+            ],
+            "additionalProperties": false,
+            "description": "Computes this secret from another one instead of asking for it: the install form shows only the source secret, and the manager writes both at install, and again whenever the source secret gets a new value in the app's settings or an update. Neither value is ever logged. Not allowed with `generate` or `optional`, nor on self-deploying entries."
+          },
+          "workers": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 24,
+              "pattern": "^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$"
+            },
+            "description": "For an entry that installs several Workers (`install.workers`): the names of the Workers that get this value. Omitted means every Worker for a secret, and for a var the Workers whose wrangler config declares it (every Worker when none does)."
+          },
+          "seedOnly": {
+            "default": false,
+            "description": "The secret exists only for `resources.d1[binding].seed`: the install form asks for it once, the seed uses it (as a param or the source of a hash), and it is never set on the Worker, stored, or asked for again by updates or settings. For a first admin's password, so the plaintext never sits in the app's environment. Not allowed with `optional`, `derive` or `workers`, nor on self-deploying entries.",
+            "type": "boolean"
+          },
+          "multiline": {
+            "default": false,
+            "description": "The value spans several lines, such as a PEM private key: the install, update and settings forms ask for it in a multi-line field that keeps every line break, and the Worker gets the value as entered (Windows line endings become `\\n`, and spaces or tabs at the end of the last line are dropped). Not allowed with `generate` or `derive`.",
+            "type": "boolean"
+          },
+          "cloudflareToken": {
+            "default": false,
+            "description": "This secret takes the Cloudflare API token the admin creates for the app from `tokenPermissions`: the install and settings forms show how to create that token next to its field. At most one secret per entry. Not allowed with `generate`, `derive` or `seedOnly`, and only when the entry lists `tokenPermissions` (or a Pipelines sink, whose token permissions Appflare adds).",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "label"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "anyOf": [
+              {
+                "not": {
+                  "required": [
+                    "multiline"
+                  ],
+                  "properties": {
+                    "multiline": {
+                      "const": true
+                    }
+                  }
+                }
+              },
+              {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "derive"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "generate"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "not": {
+                  "required": [
+                    "derive"
+                  ]
+                }
+              },
+              {
+                "not": {
+                  "required": [
+                    "generate"
+                  ]
+                },
+                "properties": {
+                  "optional": {
+                    "not": {
+                      "const": true
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "not": {
+                  "required": [
+                    "seedOnly"
+                  ],
+                  "properties": {
+                    "seedOnly": {
+                      "const": true
+                    }
+                  }
+                }
+              },
+              {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "derive"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "workers"
+                      ]
+                    }
+                  ]
+                },
+                "properties": {
+                  "optional": {
+                    "not": {
+                      "const": true
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "not": {
+                  "required": [
+                    "cloudflareToken"
+                  ],
+                  "properties": {
+                    "cloudflareToken": {
+                      "const": true
+                    }
+                  }
+                }
+              },
+              {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "derive"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "generate"
+                      ]
+                    }
+                  ]
+                },
+                "properties": {
+                  "seedOnly": {
+                    "not": {
+                      "const": true
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "vars": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The name the Worker reads the setting by, exactly as the app's code and wrangler config spell it, for example `SITE_TITLE`."
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "description": "What the install and settings forms call the setting, in plain words, for example `Site title`."
+          },
+          "help": {
+            "type": "string",
+            "description": "A sentence or two shown under the field: what the setting changes, or which values work."
+          },
+          "link": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 40,
+                "pattern": "^\\S(?:[^\\r\\n]*\\S)?$",
+                "description": "What the link says, in a few plain words (at most 40 characters), for example `Get a key` or `Create a bot`. The forms add the mark of a link that opens in a new tab."
+              },
+              "url": {
+                "type": "string",
+                "maxLength": 500,
+                "pattern": "^https:\\/\\/[^\\s\\x00-\\x1f\\x7f/?#@\\\\]+(?:[/?#][^\\s\\x00-\\x1f\\x7f\\\\]*)?$",
+                "description": "Where the link goes, as an https:// URL without a user name or password, at most 500 characters, for example `https://openrouter.ai/settings/keys`."
+              }
+            },
+            "required": [
+              "label",
+              "url"
+            ],
+            "additionalProperties": false,
+            "description": "A link shown beside the field in the install and settings forms, opened in a new tab: where to get the value, such as the page that creates an API key. Help text is shown as plain text, so put the link here rather than in `help`."
+          },
+          "default": {
+            "type": "string",
+            "description": "Value the form starts with, filled in on every install, update and settings change. `{{appUrl}}` becomes the address the app is served at (its custom domain while workers.dev is off for it, else its workers.dev URL; no trailing slash) and `{{appHostname}}` that address's hostname; `{{workerUrl}}` and `{{workerHostname}}` are always the workers.dev address (`https://<worker name>.<account subdomain>.workers.dev`); `{{workerName}}` is the installed Worker's name and `{{accountId}}` the id of the Cloudflare account. `{{wildcardHostname}}` becomes the hostname of the app's wildcard domain (for an entry with `install.wildcardHostname`), empty until one is assigned. For an app Appflare protects with Cloudflare Access, `{{accessTeamDomain}}` becomes the team domain (`<team>.cloudflareaccess.com`), `{{accessTeamName}}` the team name alone (`<team>`), `{{accessAud}}` the audience tag of the app's Access application and `{{accessCertsUrl}}` the URL of the keys that sign Access's JWTs; all four are empty while the app is not protected, and filled in again when protection is turned on or off. An entry of several Workers names one with `{{appUrl:<name>}}` and the like. When the app's wrangler config gives this var a value that is not a string (an array, object, number, or boolean), the var reaches the Worker as JSON and `default` must be JSON text, for example `[\"{{appUrl}}\"]`. Without `default`, the form starts with the wrangler config's value. For a `type: \"select\"` var, `default` must be one of the `options` values."
+          },
+          "optional": {
+            "default": false,
+            "description": "The admin may leave this var empty. Every other var needs a value, typed or from `default`, before the install runs.",
+            "type": "boolean"
+          },
+          "type": {
+            "default": "text",
+            "description": "`\"text\"` (the default) takes any value; `\"select\"` takes one of `options`, shown as choices (cards for up to 4, a dropdown beyond).",
+            "type": "string",
+            "enum": [
+              "text",
+              "select"
+            ]
+          },
+          "options": {
+            "minItems": 2,
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "description": "What the Worker gets. For a var the app reads as JSON, JSON text such as `true` or `404`."
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "description": "What the form shows for this choice."
+                }
+              },
+              "required": [
+                "value",
+                "label"
+              ],
+              "additionalProperties": false
+            },
+            "description": "The values a `type: \"select\"` var can take, in the order the form shows them. Required for, and only allowed with, `select`. Values must be distinct."
+          },
+          "derive": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The secret whose value this var is computed from, by its `key` (its `name` when it has no key). It must be a secret of this manifest, not itself derived, not optional."
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "vapid-public-key"
+                ],
+                "description": "`\"vapid-public-key\"`: the Web Push (VAPID) public key of a source secret with `generate: \"vapid-private-key\"`, as the unpadded base64url of its 65-byte uncompressed point: public config the app hands to browsers."
+              }
+            },
+            "required": [
+              "from",
+              "method"
+            ],
+            "additionalProperties": false,
+            "description": "Computes this var from a secret instead of asking for it: the install and settings forms show it read-only, and the manager sets it at install, and again whenever the source secret gets a new value in the app's settings or an update. Not allowed with `default`, `optional: true`, `type: \"select\"` or `options`, nor on self-deploying entries."
+          },
+          "workers": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 24,
+              "pattern": "^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$"
+            },
+            "description": "For an entry that installs several Workers (`install.workers`): the names of the Workers that get this value. Omitted means every Worker for a secret, and for a var the Workers whose wrangler config declares it (every Worker when none does)."
+          },
+          "seedOnly": {
+            "default": false,
+            "description": "The var exists only for `resources.d1[binding].seed`, such as a first admin's user name: the install form asks for it once, a seed statement binds it, and it is never set on the Worker, stored, or shown in settings. Must not be optional, or must have a default. Not allowed with `derive` or `workers`, nor on self-deploying entries.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "label"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "anyOf": [
+              {
+                "required": [
+                  "type",
+                  "options"
+                ],
+                "properties": {
+                  "type": {
+                    "const": "select"
+                  }
+                }
+              },
+              {
+                "not": {
+                  "required": [
+                    "options"
+                  ]
+                },
+                "properties": {
+                  "type": {
+                    "not": {
+                      "const": "select"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "not": {
+                  "required": [
+                    "derive"
+                  ]
+                }
+              },
+              {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "default"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "options"
+                      ]
+                    }
+                  ]
+                },
+                "properties": {
+                  "type": {
+                    "not": {
+                      "const": "select"
+                    }
+                  },
+                  "optional": {
+                    "not": {
+                      "const": true
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "postInstall": {
+      "default": [],
+      "description": "Instructions shown after a successful install, in order.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "markdown"
+            ],
+            "description": "How `content` is written. Only `\"markdown\"` for now."
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Markdown the manager shows once the app is installed, such as how to sign in the first time. These placeholders are filled in: `{{appUrl}}`, `{{appHostname}}`, `{{workerUrl}}`, `{{workerHostname}}`, `{{workerName}}`, `{{accountId}}`, `{{emailDomain}}`, `{{emailZoneId}}`, `{{wildcardHostname}}`. For the address people open, use `{{appUrl}}`, which follows a custom domain. An entry of several Workers names one of them with `{{appUrl:<name>}}` and the like."
+          }
+        },
+        "required": [
+          "type",
+          "content"
+        ],
+        "additionalProperties": false,
+        "description": "A note the manager shows after the install."
+      }
+    },
+    "tokenPermissions": {
+      "default": [],
+      "description": "The permissions of the Cloudflare API token the admin creates for the app itself (never Appflare's own). The secret that takes the token sets `cloudflareToken: true`.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "group": {
+            "type": "string",
+            "minLength": 1,
+            "enum": [
+              "DNS",
+              "Zone",
+              "Zone Settings",
+              "Analytics",
+              "Page Rules",
+              "Cache Purge",
+              "SSL and Certificates",
+              "Firewall Services",
+              "Load Balancers",
+              "Logs",
+              "Workers Routes",
+              "Email Routing Rules",
+              "Account Settings",
+              "Account Analytics",
+              "Billing",
+              "Magic Transit",
+              "Workers Scripts",
+              "Workers KV Storage",
+              "Workers R2 Storage",
+              "Workers R2 Data Catalog",
+              "Workers R2 SQL",
+              "Workers Tail",
+              "Workers Containers",
+              "D1",
+              "Queues",
+              "Vectorize",
+              "Images",
+              "Hyperdrive",
+              "Pipelines",
+              "Secrets Store",
+              "Email Sending",
+              "Email Routing Addresses",
+              "Access: Apps and Policies",
+              "Access: Organizations, Identity Providers, and Groups"
+            ],
+            "description": "The permission group, as the Cloudflare dashboard's token form names it, for example `\"DNS\"` or `\"Workers Scripts\"`. Zone groups: DNS, Zone, Zone Settings, Analytics, Page Rules, Cache Purge, SSL and Certificates, Firewall Services, Load Balancers, Logs, Workers Routes, Email Routing Rules. Account groups: Account Settings, Account Analytics, Billing, Logs, Magic Transit, Workers Scripts, Workers KV Storage, Workers R2 Storage, Workers R2 Data Catalog, Workers R2 SQL, Workers Tail, Workers Containers, D1, Queues, Vectorize, Images, Hyperdrive, Pipelines, Secrets Store, Email Sending, Email Routing Addresses, Access: Apps and Policies, Access: Organizations, Identity Providers, and Groups."
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "account",
+              "zone"
+            ],
+            "description": "`\"account\"` or `\"zone\"`: where the group applies, as the token form groups it."
+          },
+          "access": {
+            "type": "string",
+            "enum": [
+              "read",
+              "edit"
+            ],
+            "description": "`\"read\"` or `\"edit\"`: the access level the app needs."
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300,
+            "description": "Why the app needs the permission, in one plain sentence shown next to it, for example \"Lists your zones.\" Say \"Optional:\" first when the app works without it."
+          }
+        },
+        "required": [
+          "group",
+          "scope",
+          "access",
+          "reason"
+        ],
+        "additionalProperties": false,
+        "description": "A permission the app's own Cloudflare API token needs (never Appflare's). The manager links to the dashboard's token form with these prefilled.",
+        "anyOf": [
+          {
+            "properties": {
+              "scope": {
+                "const": "account"
+              },
+              "group": {
+                "enum": [
+                  "Account Settings",
+                  "Account Analytics",
+                  "Billing",
+                  "Logs",
+                  "Magic Transit",
+                  "Workers Scripts",
+                  "Workers KV Storage",
+                  "Workers R2 Storage",
+                  "Workers R2 Data Catalog",
+                  "Workers R2 SQL",
+                  "Workers Tail",
+                  "Workers Containers",
+                  "D1",
+                  "Queues",
+                  "Vectorize",
+                  "Images",
+                  "Hyperdrive",
+                  "Pipelines",
+                  "Secrets Store",
+                  "Email Sending",
+                  "Email Routing Addresses",
+                  "Access: Apps and Policies",
+                  "Access: Organizations, Identity Providers, and Groups"
+                ]
+              }
+            }
+          },
+          {
+            "properties": {
+              "scope": {
+                "const": "zone"
+              },
+              "group": {
+                "enum": [
+                  "DNS",
+                  "Zone",
+                  "Zone Settings",
+                  "Analytics",
+                  "Page Rules",
+                  "Cache Purge",
+                  "SSL and Certificates",
+                  "Firewall Services",
+                  "Load Balancers",
+                  "Logs",
+                  "Workers Routes",
+                  "Email Routing Rules"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    "resources": {
+      "type": "object",
+      "properties": {
+        "vectorize": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "dimensions": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1536
+              },
+              "metric": {
+                "type": "string",
+                "enum": [
+                  "cosine",
+                  "euclidean",
+                  "dot-product"
+                ]
+              },
+              "metadataIndexes": {
+                "minItems": 1,
+                "maxItems": 10,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "propertyName": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 512,
+                      "pattern": "^[^$\"][^\"]*$",
+                      "description": "The metadata property queries filter on, for example `url` or `user_id`."
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "string",
+                        "number",
+                        "boolean"
+                      ],
+                      "description": "The property's type: string, number or boolean."
+                    }
+                  },
+                  "required": [
+                    "propertyName",
+                    "type"
+                  ],
+                  "additionalProperties": false
+                },
+                "description": "Metadata properties the app's queries filter on, each with its type. Appflare creates these metadata indexes when it creates the index, before the app writes a vector (a vector written earlier is not indexed). At most 10."
+              }
+            },
+            "required": [
+              "dimensions",
+              "metric"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "r2": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "lifecycle": {
+                "minItems": 1,
+                "maxItems": 20,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9 ._-]{0,54}$",
+                      "not": {
+                        "const": "Default Multipart Abort Rule"
+                      },
+                      "description": "The rule's name, shown in the bucket's settings, for example \"Delete temporary files\"."
+                    },
+                    "prefix": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 1024,
+                      "description": "Apply the rule to objects whose keys start with this, for example `tmp/`. Omitted, it applies to every object."
+                    },
+                    "deleteAfterDays": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 36500,
+                      "description": "Delete an object this long after it was uploaded, in whole days (1 to 36500)."
+                    },
+                    "infrequentAccessAfterDays": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 36500,
+                      "description": "Move an object to Infrequent Access storage this long after it was uploaded, in whole days (1 to 36500)."
+                    },
+                    "abortMultipartUploadsAfterDays": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 36500,
+                      "description": "Abort a multipart upload still unfinished this long after it started, in whole days (1 to 36500)."
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ],
+                  "additionalProperties": false,
+                  "anyOf": [
+                    {
+                      "required": [
+                        "deleteAfterDays"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "infrequentAccessAfterDays"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "abortMultipartUploadsAfterDays"
+                      ]
+                    }
+                  ]
+                },
+                "description": "Lifecycle rules Appflare sets on the bucket when it creates it, and when an update declares them for a bucket the app already has, beside Cloudflare's default rule for unfinished multipart uploads and any rule added by hand. On the bucket each id starts with `appflare:`. At most 20, each with a unique id."
+              }
+            },
+            "required": [
+              "lifecycle"
+            ],
+            "additionalProperties": false
+          },
+          "description": "Settings of the R2 bucket Appflare creates for an R2 binding, keyed by the binding's name: lifecycle rules that delete objects, move them to Infrequent Access storage, or abort unfinished multipart uploads after some days. Every key must be an R2 binding of the wrangler config. Not allowed on self-deploying entries."
+        },
+        "hyperdrive": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "protocol": {
+                "type": "string",
+                "enum": [
+                  "postgres",
+                  "mysql"
+                ],
+                "description": "The database the app expects behind the binding: `postgres` or `mysql`."
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "description": "What the install form calls the database, for example \"Main database\"."
+              },
+              "help": {
+                "type": "string",
+                "minLength": 1,
+                "description": "A sentence under the connection string field, for example which schema it needs."
+              },
+              "caching": {
+                "type": "boolean",
+                "description": "Whether Hyperdrive caches the results of read queries for this database. Omitted keeps Cloudflare's default (on) when the configuration is created, and updates leave the setting as it is. `false` turns caching off, for an app that must read its own writes at once; `true` turns it on. Either value is applied at install and again on every update and settings change, and needs `\"hyperdrive-caching\"` in `requires`."
+              }
+            },
+            "required": [
+              "protocol"
+            ],
+            "additionalProperties": false
+          },
+          "minProperties": 1,
+          "maxProperties": 8,
+          "description": "The Hyperdrive bindings of the wrangler config, keyed by the binding's name, each with the database it connects to (`postgres` or `mysql`). The database runs outside Cloudflare: the install form asks for its connection string, and Appflare creates a Hyperdrive configuration of the install's own from it. Every Hyperdrive binding must be listed. Not allowed on self-deploying entries."
+        },
+        "pipelines": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[A-Za-z_$][A-Za-z0-9_$]*$"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fields": {
+                    "minItems": 1,
+                    "maxItems": 256,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128,
+                          "description": "The field's name in each event."
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "int32",
+                            "int64",
+                            "float32",
+                            "float64",
+                            "bool",
+                            "string",
+                            "binary",
+                            "timestamp",
+                            "json"
+                          ],
+                          "description": "The field's type."
+                        },
+                        "required": {
+                          "type": "boolean",
+                          "description": "Every event carries the field. Cloudflare drops an event that lacks it."
+                        },
+                        "unit": {
+                          "type": "string",
+                          "enum": [
+                            "second",
+                            "millisecond",
+                            "microsecond",
+                            "nanosecond"
+                          ],
+                          "description": "For a `timestamp` field sent as a number: what the number counts."
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "type"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "description": "The fields of each event, in order. Pipelines adds `__ingest_ts` itself; do not list it."
+                  }
+                },
+                "required": [
+                  "fields"
+                ],
+                "additionalProperties": false,
+                "description": "The stream's schema. Cloudflare drops events that do not match it. Omitted: the stream is unstructured and every event lands in one `value` column."
+              },
+              "sink": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "r2_data_catalog",
+                    "description": "An Apache Iceberg table in R2 Data Catalog, the only sink Appflare sets up."
+                  },
+                  "bucket": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                    "description": "The bucket the table lives in. The name of an R2 binding of the app's wrangler config uses that binding's bucket; any other name gets a bucket of the install's own, named `<worker name>-<name lowercased, _ as ->` like every resource Appflare creates, which no Worker binds (the app reaches it through R2 SQL, for example)."
+                  },
+                  "namespace": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                    "description": "The table's namespace in the bucket's catalog."
+                  },
+                  "table": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                    "description": "The table's name in the namespace."
+                  },
+                  "tokenSecret": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The catalog secret, by its key (its name when it has none), that holds a Cloudflare API token with R2 Data Catalog and R2 Storage write access (the dashboard's R2 token with Admin Read & Write). Cloudflare keeps it as the sink's credential, and as the catalog's for table maintenance; Appflare's own token never leaves the manager. The secret must be asked for (no `generate`, `optional`, `derive` or `seedOnly`)."
+                  },
+                  "rollIntervalSeconds": {
+                    "type": "integer",
+                    "minimum": 60,
+                    "maximum": 86400,
+                    "description": "How often the sink writes a file, in seconds: at least 60 for a catalog sink. Cloudflare's default is 300."
+                  },
+                  "compression": {
+                    "type": "string",
+                    "enum": [
+                      "zstd",
+                      "snappy",
+                      "gzip",
+                      "lz4",
+                      "uncompressed"
+                    ],
+                    "description": "The Parquet compression. Cloudflare's default is zstd."
+                  },
+                  "compaction": {
+                    "type": "boolean",
+                    "description": "Turn on the catalog's automatic compaction, which merges the sink's small files."
+                  },
+                  "snapshotExpiration": {
+                    "type": "object",
+                    "properties": {
+                      "maxAge": {
+                        "type": "string",
+                        "pattern": "^\\d+[dhms]$",
+                        "description": "Snapshots older than this are expired, such as `\"30d\"` (d, h, m or s)."
+                      },
+                      "minSnapshotsToKeep": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991,
+                        "description": "Snapshots kept however old they are."
+                      }
+                    },
+                    "required": [
+                      "maxAge"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Turn on the catalog's snapshot expiration, which deletes old snapshots' files."
+                  }
+                },
+                "required": [
+                  "type",
+                  "bucket",
+                  "namespace",
+                  "table",
+                  "tokenSecret"
+                ],
+                "additionalProperties": false,
+                "description": "Where the stream's events land: an Iceberg table in an R2 bucket's Data Catalog, written with the API token the admin enters for the app."
+              }
+            },
+            "required": [
+              "sink"
+            ],
+            "additionalProperties": false
+          },
+          "description": "The Pipelines bindings of the wrangler config, keyed by binding name: each stream's schema and the Iceberg table its events land in. Appflare creates the stream, an R2 Data Catalog sink and a pass-through pipeline for each, and binds the stream. Needs `plan: \"paid\"` (Pipelines is on Workers Paid only). Not allowed on self-deploying entries."
+        },
+        "d1": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "migrationsDir": {
+                "type": "string",
+                "maxLength": 256,
+                "pattern": "^(?!(?:.*\\/)?\\.{1,2}(?:\\/|$))[0-9A-Za-z.@+_-]+(?:\\/[0-9A-Za-z.@+_-]+)*$",
+                "description": "The folder of the binding's migrations, relative to the checkout's root. Replaces the wrangler config's `migrations_dir`: its `.sql` files run and are recorded in `d1_migrations` as `wrangler d1 migrations apply` does."
+              },
+              "migrationsGlob": {
+                "type": "string",
+                "pattern": "^[0-9A-Za-z.@+_*/-]+$",
+                "description": "A glob of the binding's migration files, relative to the checkout's root, for tools that write one folder per migration: `prisma/migrations/*/migration.sql`. The folder before the first `*` segment works as wrangler's `migrations_dir` and the glob as its `migrations_pattern`: each file is recorded by its path from that folder (`20240101_init/migration.sql`), as wrangler records it. Prefer `migrations_pattern` in the wrangler config when upstream sets it."
+              },
+              "schema": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 256,
+                  "pattern": "^(?!(?:.*\\/)?\\.{1,2}(?:\\/|$))[0-9A-Za-z.@+_-]+(?:\\/[0-9A-Za-z.@+_-]+)*$"
+                },
+                "description": "SQL files that run on every install and update, in this order, after the migrations, and are not recorded in `d1_migrations`. Each must be safe to run again: every CREATE TABLE, INDEX, TRIGGER and VIEW says IF NOT EXISTS, and no statement drops or alters anything."
+              },
+              "postDeployMigrationsDir": {
+                "type": "string",
+                "maxLength": 256,
+                "pattern": "^(?!(?:.*\\/)?\\.{1,2}(?:\\/|$))[0-9A-Za-z.@+_-]+(?:\\/[0-9A-Za-z.@+_-]+)*$",
+                "description": "A folder of migrations that run once the new version serves all traffic, for changes the previous version's code would break on. Recorded in `d1_migrations` like the others, so their file names must differ from the migrations'. Rolling back does not undo them."
+              },
+              "seed": {
+                "type": "object",
+                "properties": {
+                  "hashes": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                    },
+                    "additionalProperties": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "from": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128,
+                              "description": "The secret whose value is hashed, by its key (its name when it has none): a secret of this manifest, neither optional nor derived."
+                            },
+                            "method": {
+                              "type": "string",
+                              "const": "pbkdf2-sha256"
+                            },
+                            "iterations": {
+                              "type": "integer",
+                              "minimum": 1000,
+                              "maximum": 100000,
+                              "description": "PBKDF2 iterations, as the app checks them. At most 100000: Cloudflare Workers refuse to derive more."
+                            },
+                            "saltBytes": {
+                              "type": "integer",
+                              "minimum": 16,
+                              "maximum": 64,
+                              "description": "Bytes of random salt; `{ salt }` params write it with `encoding`."
+                            },
+                            "keyBytes": {
+                              "type": "integer",
+                              "minimum": 16,
+                              "maximum": 64,
+                              "description": "Bytes of derived key; `{ hash }` params write it with `encoding`."
+                            },
+                            "encoding": {
+                              "type": "string",
+                              "enum": [
+                                "base64url",
+                                "base64",
+                                "hex"
+                              ],
+                              "description": "How the hash and salt are written: `base64url` (unpadded), `base64` (padded) or `hex` (lower case)."
+                            }
+                          },
+                          "required": [
+                            "from",
+                            "method",
+                            "iterations",
+                            "saltBytes",
+                            "keyBytes",
+                            "encoding"
+                          ],
+                          "additionalProperties": false,
+                          "description": "A PBKDF2-SHA-256 hash of a secret with a fresh random salt, as the app stores it."
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "from": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128,
+                              "description": "The secret whose value is hashed, by its key (its name when it has none): a secret of this manifest, neither optional nor derived. Values longer than 72 bytes are refused at install."
+                            },
+                            "method": {
+                              "type": "string",
+                              "const": "bcrypt"
+                            },
+                            "cost": {
+                              "type": "integer",
+                              "minimum": 4,
+                              "maximum": 10,
+                              "description": "The bcrypt cost (log2 of the rounds); 10 when omitted."
+                            }
+                          },
+                          "required": [
+                            "from",
+                            "method"
+                          ],
+                          "additionalProperties": false,
+                          "description": "A bcrypt hash (`$2b$`) of a secret; its salt is part of the hash."
+                        }
+                      ]
+                    },
+                    "description": "Values derived from secrets, by name, for `{ hash }` and `{ salt }` params: a `pbkdf2-sha256` hash with explicit parameters, or a `bcrypt` hash. Each is computed once per install, so a hash and its salt match. Never logged or stored by Appflare."
+                  },
+                  "statements": {
+                    "minItems": 1,
+                    "maxItems": 10,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "sql": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 4096,
+                          "description": "Exactly one `INSERT OR IGNORE` or `INSERT ... ON CONFLICT ... DO NOTHING` statement, with an anonymous `?` placeholder for each param. No `WITH`, `DO UPDATE`, other statement kinds, numbered or named parameters, and no `d1_migrations`, `sqlite_` or `_cf_` tables."
+                        },
+                        "params": {
+                          "maxItems": 20,
+                          "type": "array",
+                          "items": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "var": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 128,
+                                    "description": "A var of this manifest."
+                                  }
+                                },
+                                "required": [
+                                  "var"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "secret": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 128,
+                                    "description": "A secret of this manifest, not optional, by its key (its name when it has none)."
+                                  }
+                                },
+                                "required": [
+                                  "secret"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "hash": {
+                                    "type": "string",
+                                    "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+                                    "description": "A hash of this seed's `hashes`."
+                                  }
+                                },
+                                "required": [
+                                  "hash"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "salt": {
+                                    "type": "string",
+                                    "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+                                    "description": "The salt of a `pbkdf2-sha256` hash of this seed's `hashes`."
+                                  }
+                                },
+                                "required": [
+                                  "salt"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "value": {
+                                    "type": "string",
+                                    "maxLength": 1024,
+                                    "description": "Literal text, bound as it is."
+                                  }
+                                },
+                                "required": [
+                                  "value"
+                                ],
+                                "additionalProperties": false
+                              }
+                            ]
+                          },
+                          "description": "The values bound to the placeholders, in order: one object per `?`."
+                        }
+                      },
+                      "required": [
+                        "sql",
+                        "params"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "description": "The statements, run in order, each once, at install only. Updates never run them, even when they change."
+                  },
+                  "beforeSchema": {
+                    "type": "boolean",
+                    "description": "Run the statements before the binding's schema files instead of after them (the default), so a seeded row wins over a default row a schema file adds with INSERT OR IGNORE. The binding's migrations always run first; post-deploy migrations run after the seed when `beforeSchema` is set."
+                  }
+                },
+                "required": [
+                  "statements"
+                ],
+                "additionalProperties": false,
+                "description": "Rows the app needs before anyone can sign in (a first admin account), added once at install with values from the install form, bound as D1 parameters. Not allowed on self-deploying entries."
+              },
+              "baseline": {
+                "type": "string",
+                "maxLength": 256,
+                "pattern": "^(?!(?:.*\\/)?\\.{1,2}(?:\\/|$))[0-9A-Za-z.@+_-]+(?:\\/[0-9A-Za-z.@+_-]+)*$",
+                "description": "One SQL file with the binding's whole current schema, for apps whose migrations only bring older databases up to date. It runs once, on the new database, before the migrations (at install, or in the update that adds the binding); every migration the version ships is then recorded in `d1_migrations` as applied without running, and updates run only migrations added later. It may create without IF NOT EXISTS and insert rows, but not ATTACH or DETACH a database, set a PRAGMA, open or end a transaction, or name `d1_migrations` or a `sqlite_` or `_cf_` table. Not together with `schema`."
+              }
+            },
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "not": {
+                  "required": [
+                    "migrationsDir",
+                    "migrationsGlob"
+                  ]
+                }
+              },
+              {
+                "not": {
+                  "required": [
+                    "baseline",
+                    "schema"
+                  ]
+                }
+              }
+            ],
+            "minProperties": 1
+          },
+          "description": "Where each D1 binding's SQL lives when the wrangler config's migrations folder does not describe it, keyed by the binding's name: a migrations folder or glob, schema files that run on every install and update, migrations that run after the new version serves, seed statements, and a baseline schema that runs once on a new database. Paths are relative to the checkout's root. Not allowed on self-deploying entries."
+        }
+      },
+      "additionalProperties": false
+    },
+    "bump": {
+      "default": {
+        "autoMerge": false
+      },
+      "type": "object",
+      "properties": {
+        "autoMerge": {
+          "default": false,
+          "description": "Whether the bump bot's pull request merges itself once the required checks, including the install check, pass. Left out or `true`, it does for an artifact tier entry that does not set `source.version`; the default of `false` shown here only keeps released manifests as they were and does not opt out. Set `false` to have a maintainer merge each bump, for example when upstream's releases often break installs or need a migration guide. Sandbox and self-deploying entries are never merged by the bot and may not set `true`.",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "description": "How the catalog's bump bot treats this entry when its upstream moves. Left out, an artifact tier entry's bumps merge themselves once their checks pass."
+    },
+    "revision": {
+      "default": 1,
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000,
+      "description": "Which edit of this entry's form and copy the catalog publishes for the build its `source` already released, starting at 1 (the default when omitted). Raise it by one to publish a change to `name`, `summary`, `homepage`, `upstreamRepo`, `license`, `categories`, `maintainers`, `secrets`, `vars`, `postInstall`, `bump`, `access` or `openPath`, or to add `\"access\"` to `requires`, without moving `source`: the released artifact stays as it is, and managers show the new form without an update. `tagline`, `features`, `alternativeTo`, `licenseNote` and `authors` need no revision while the entry has never published one: the catalog shows them from the current manifest. A published revision is signed with the whole manifest and never changes, so on an entry that has one, an edit to any of them needs a higher revision too. Anything else needs a new build, so move `source` instead."
+    },
+    "access": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "required",
+            "recommended"
+          ],
+          "description": "`\"required\"`: the app is always installed behind Cloudflare Access, and its protection cannot be turned off. For an app with no sign-in of its own, or one that relies on Access's. It installs only on accounts with a Zero Trust organization and a Cloudflare token with the Access permissions. `\"recommended\"`: the install form's protection switch starts on. Leave it out to offer protection with the switch off."
+        },
+        "bypass": {
+          "minItems": 1,
+          "maxItems": 10,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(?:/[A-Za-z0-9._~@:+=,-]+)+(?:/\\*)?$",
+            "maxLength": 128
+          },
+          "description": "Paths that stay public while the app is protected, such as share links (`\"/s/*\"`), `\"/.well-known/*\"` or a webhook (`\"/api/webhook\"`). Each starts with `/` and may end in `/*` for everything under it (`/s/*` does not cover `/share`); no other wildcard, query or fragment. At most 10. They stay public on every address the app answers on (its workers.dev address and its domains). The health check path is not made public: Appflare's health checks sign in with a token of their own.",
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false,
+      "description": "How the app goes with Cloudflare Access, which Appflare can put in front of any installed app so that only the manager's users reach it (and Appflare's own health checks, with a service token of the app's own). Without this block protection is offered at install, switched off. An app that verifies Access's sign-in itself reads the `{{accessTeamDomain}}`, `{{accessTeamName}}`, `{{accessAud}}` and `{{accessCertsUrl}}` placeholders from a var. Not for the self-deploying tier."
+    },
+    "openPath": {
+      "type": "string",
+      "pattern": "^(?:/(?!\\.\\.?(?:/|$))[A-Za-z0-9._~@:+=,-]+)+/?$",
+      "maxLength": 128,
+      "description": "Where the manager's Open buttons take people in the app, as a path on its address, for an app whose interface is not at its root, for example `/dashboard`. It starts with `/`, has no query or fragment, no empty, `.` or `..` segments, and holds letters, digits and `- . _ ~ @ : + = ,` only, at most 128 characters; it may end in `/`. Omitted means the root. Health checks, `{{appUrl}}` and the addresses the manager lists stay the root, so a `postInstall` note links to the path itself (`{{appUrl}}/dashboard`). A manager from before this field opens the root."
+    }
+  },
+  "required": [
+    "slug",
+    "name",
+    "summary",
+    "tagline",
+    "repo",
+    "license",
+    "categories",
+    "source",
+    "install",
+    "plan"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "anyOf": [
+        {
+          "properties": {
+            "install": {
+              "properties": {
+                "tier": {
+                  "not": {
+                    "const": "self-deploying"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "access"
+                ]
+              },
+              {
+                "required": [
+                  "requires"
+                ],
+                "properties": {
+                  "requires": {
+                    "contains": {
+                      "const": "access"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "anyOf": [
+        {
+          "not": {
+            "required": [
+              "access"
+            ],
+            "properties": {
+              "access": {
+                "required": [
+                  "mode"
+                ],
+                "properties": {
+                  "mode": {
+                    "const": "required"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "required": [
+            "requires"
+          ],
+          "properties": {
+            "requires": {
+              "contains": {
+                "const": "access"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "anyOf": [
+        {
+          "not": {
+            "required": [
+              "vars"
+            ],
+            "properties": {
+              "vars": {
+                "contains": {
+                  "required": [
+                    "default"
+                  ],
+                  "properties": {
+                    "default": {
+                      "type": "string",
+                      "pattern": "\\{\\{\\s*(?:accessTeamDomain|accessTeamName|accessAud|accessCertsUrl)\\s*\\}\\}"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "required": [
+            "requires"
+          ],
+          "properties": {
+            "requires": {
+              "contains": {
+                "const": "access"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "anyOf": [
+        {
+          "properties": {
+            "install": {
+              "properties": {
+                "tier": {
+                  "not": {
+                    "const": "self-deploying"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "resources": {
+              "not": {
+                "required": [
+                  "pipelines"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "anyOf": [
+        {
+          "properties": {
+            "plan": {
+              "const": "paid"
+            }
+          }
+        },
+        {
+          "properties": {
+            "resources": {
+              "not": {
+                "required": [
+                  "pipelines"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "anyOf": [
+        {
+          "properties": {
+            "install": {
+              "properties": {
+                "tier": {
+                  "not": {
+                    "const": "self-deploying"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "resources": {
+              "not": {
+                "required": [
+                  "hyperdrive"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "anyOf": [
+        {
+          "properties": {
+            "install": {
+              "properties": {
+                "tier": {
+                  "not": {
+                    "const": "self-deploying"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "resources": {
+              "not": {
+                "required": [
+                  "d1"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "anyOf": [
+        {
+          "properties": {
+            "install": {
+              "properties": {
+                "tier": {
+                  "not": {
+                    "const": "self-deploying"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "resources": {
+              "not": {
+                "required": [
+                  "r2"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "anyOf": [
+        {
+          "properties": {
+            "install": {
+              "properties": {
+                "tier": {
+                  "not": {
+                    "const": "self-deploying"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "secrets": {
+              "items": {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "optional"
+                      ],
+                      "properties": {
+                        "optional": {
+                          "const": true
+                        }
+                      }
+                    },
+                    {
+                      "required": [
+                        "derive"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "seedOnly"
+                      ],
+                      "properties": {
+                        "seedOnly": {
+                          "const": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "vars": {
+              "items": {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "derive"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "seedOnly"
+                      ],
+                      "properties": {
+                        "seedOnly": {
+                          "const": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "$defs": {
+    "__schema0": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema0"
+          }
+        },
+        {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/__schema0"
+          }
+        }
+      ]
+    },
+    "__schema1": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema1"
+          }
+        },
+        {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/__schema1"
+          }
+        }
+      ]
+    }
+  }
+}

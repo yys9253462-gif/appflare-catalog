@@ -1,0 +1,584 @@
+name: publish
+
+# main: publish every artifact tier app whose current pin has no GitHub Release
+# yet, and list every sandbox and self-deploying tier app. Both run in the
+# user's own account (a sandbox tier entry is built there, a self-deploying
+# one runs its own installer there), so neither is packed, signed, or
+# released: the plan leaves them out, build-index lists them with a build
+# block, and the Pages site carries their catalog manifests at
+# apps/<slug>/manifest.json.
+#
+#   build-packer  APPFLARE_DEPLOY_KEY only; builds the packer bundle, runs no app code
+#   plan          no secrets; lists artifact tier apps whose <slug>@<version> tag does not exist
+#                 (a revision of a released version is planned apart, never packed)
+#   sign-revisions APPFLARE_SIGNING_KEY only; runs no app code; signs each planned
+#                 revised catalog manifest (the planned bytes only) with the key id
+#                 of its release, and checks the signature with the trusted keys
+#   pack          no secrets; packs each app (runs its install and build code)
+#                 into an unsigned intermediate with the catalog's key id
+#   sign          APPFLARE_SIGNING_KEY only; runs no app code; signs only a manifest.json
+#                 whose app, version, keyId, and catalog (with the pin) equal the plan
+#   release       contents: write, CATALOG_PUSH_KEY; re-checks against the plan,
+#                 creates the releases, rebuilds and commits index.json (with the
+#                 revision signatures), and assembles the site, where build-site
+#                 verifies each revised manifest's signature before publishing it
+#   pages         deploys index.json, schema/v1.json, the catalog manifests of
+#                 sandbox and self-deploying entries and of artifact tier entries
+#                 whose revision is above their release's, every entry's images, the
+#                 featured images, and the live stats.json to GitHub Pages (the
+#                 site is also kept as the "catalog-site" artifact, which the
+#                 stats workflow redeploys with new numbers)
+#   docs          DOCS_REBUILD_TOKEN only, no checkout, runs no code; starts the
+#                 docs site workflow in appflare/appflare so appflare.dev lists
+#                 what was just published (skipped with a notice when unset)
+#
+# The plan is computed from the manifests and existing releases, so any run
+# (including a manual one, or the one after a cancelled run) publishes whatever
+# is missing. A manual run can narrow the plan to some apps with the "apps" input.
+
+on:
+  push:
+    branches: [main]
+    # A new .appflare-ref or schema can change how every published entry's
+    # catalog manifest is parsed, and so its published bytes and digest; the
+    # index and Pages are rebuilt even when nothing needs a release.
+    paths: ["apps/**", ".appflare-ref", "schema/**", "featured.json", "featured/**"]
+  workflow_dispatch:
+    inputs:
+      apps:
+        description: >
+          Comma-separated app slugs to consider (for example "cut"). Empty: every
+          app. Either way, only apps whose release does not exist yet are published.
+        type: string
+        required: false
+        default: ""
+
+permissions: {}
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+    working-directory: catalog
+
+env:
+  # Unset for the official catalog: it signs with key id catalog-2026-09, and
+  # every check trusts the keys embedded in @appflare/schema, as managers do. A
+  # catalog run from a copy of this repository sets the repository variable to
+  # its own public key line ({"keyId":"...","publicKeyBase64":"..."}); it then
+  # signs with that key id and its checks trust that key alone.
+  # scripts/signing-key.ts reads it.
+  APPFLARE_PUBLIC_KEY: ${{ vars.APPFLARE_PUBLIC_KEY }}
+  # The Rust release pack jobs install for an entry that needs Rust and whose
+  # checkout pins no toolchain of its own (scripts/rust-toolchain.ts). An exact
+  # release, so a pack does not change when a new stable ships.
+  RUST_TOOLCHAIN: "1.98.1"
+
+jobs:
+  build-packer:
+    name: build packer
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    outputs:
+      # Every job that downloads the bundle checks it against this.
+      packer-sha256: ${{ steps.build.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: catalog
+          persist-credentials: false
+      - id: build
+        uses: ./catalog/.github/actions/build-packer
+        with:
+          appflare-deploy-key: ${{ secrets.APPFLARE_DEPLOY_KEY }}
+
+  plan:
+    name: plan
+    needs: build-packer
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      apps: ${{ steps.plan.outputs.apps }}
+      revisions: ${{ steps.plan.outputs.revisions }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: catalog
+          persist-credentials: false
+      - uses: ./catalog/.github/actions/use-packer
+        with:
+          sha256: ${{ needs.build-packer.outputs.packer-sha256 }}
+      - id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ONLY_APPS: ${{ inputs.apps }}
+        run: |
+          set -euo pipefail
+          only=()
+          if [ -n "${ONLY_APPS:-}" ]; then
+            only=(--only "${ONLY_APPS}")
+          fi
+          apps="$(pnpm -s publish-plan --out "${RUNNER_TEMP}/publish-plan.json" "${only[@]}")"
+          echo "apps to publish: ${apps}"
+          echo "apps=${apps}" >> "${GITHUB_OUTPUT}"
+          revisions="$(jq -c '.revisions // {} | keys' "${RUNNER_TEMP}/publish-plan.json")"
+          echo "revisions to sign: ${revisions}"
+          echo "revisions=${revisions}" >> "${GITHUB_OUTPUT}"
+      # What sign and release hold every artifact to: app, version,
+      # keyId, and the canonical catalog block (with the pin) per slug.
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: publish-plan
+          path: ${{ runner.temp }}/publish-plan.json
+          if-no-files-found: error
+          retention-days: 7
+
+  pack:
+    name: pack ${{ matrix.app }}
+    needs: [build-packer, plan]
+    if: needs.plan.outputs.apps != '[]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    # Runs third-party install and build code: no secrets, read-only token, no
+    # persisted credentials.
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJSON(needs.plan.outputs.apps) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: catalog
+          persist-credentials: false
+      - uses: ./catalog/.github/actions/use-packer
+        with:
+          sha256: ${{ needs.build-packer.outputs.packer-sha256 }}
+      # Entries whose packageManager is bun (glance) install and build with it,
+      # and the runner image has no bun. 1.3.12 is the bun the sandbox build
+      # image carries, so an entry packs with the same bun in either place.
+      # No cache: this job runs the app's own install and build code, which
+      # must not be able to replace a bun binary later jobs would restore.
+      - name: Set up bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.3.12
+          no-cache: true
+      # Entries whose install.toolchains lists rust (workers-rs apps, built
+      # with worker-build) need a Rust toolchain with the wasm32 target, which
+      # the runner image's default toolchain lacks. The toolchain is the one
+      # the upstream checkout pins in rust-toolchain.toml at the entry's
+      # pinned commit, else RUST_TOOLCHAIN above. worker-build fetches its own
+      # wasm-bindgen, esbuild and wasm-opt, so nothing else is installed.
+      - name: Read the Rust toolchain the entry needs
+        id: rust
+        env:
+          APP: ${{ matrix.app }}
+        run: node scripts/rust-toolchain.ts "${APP}" >> "${GITHUB_OUTPUT}"
+      - name: Set up Rust
+        if: steps.rust.outputs.rust == 'true'
+        env:
+          TOOLCHAIN: ${{ steps.rust.outputs.toolchain }}
+          TARGETS: ${{ steps.rust.outputs.targets }}
+          COMPONENTS: ${{ steps.rust.outputs.components }}
+        run: |
+          set -euo pipefail
+          # The script allows only rustup names, so splitting these on spaces is safe.
+          args=(--profile minimal)
+          for target in ${TARGETS}; do args+=(--target "${target}"); done
+          for component in ${COMPONENTS}; do args+=(--component "${component}"); done
+          rustup toolchain install "${TOOLCHAIN}" "${args[@]}"
+          rustup default "${TOOLCHAIN}"
+          # Crates that compile C for wasm32 (zstd-sys, for one) need clang and
+          # llvm-ar. Some upstream .cargo/config.toml files point them at a
+          # macOS Homebrew path; cargo's [env] never overrides a variable that
+          # is already set, so the runner's own clang wins.
+          if command -v clang > /dev/null; then
+            echo "CC_wasm32_unknown_unknown=$(command -v clang)" >> "${GITHUB_ENV}"
+            ar="$(clang -print-prog-name=llvm-ar)"
+            if [ -x "${ar}" ] || ar="$(command -v llvm-ar)"; then
+              echo "AR_wasm32_unknown_unknown=${ar}" >> "${GITHUB_ENV}"
+            fi
+          fi
+          rustc --version
+          cargo --version
+      - name: Pack an unsigned intermediate, verify hashes and the upload budget
+        env:
+          APP: ${{ matrix.app }}
+        run: |
+          set -euo pipefail
+          key_id="$(node scripts/signing-key.ts key-id)"
+          pnpm pack-app "${APP}" --out "dist/${APP}" --key-id "${key_id}"
+      - name: Upload exactly dist/<slug>
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: unsigned-${{ matrix.app }}
+          path: catalog/dist/${{ matrix.app }}
+          if-no-files-found: error
+          retention-days: 7
+
+  sign:
+    name: sign ${{ matrix.app }}
+    needs: [build-packer, plan, pack]
+    if: needs.plan.outputs.apps != '[]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # Holds the signing key. Checks out only the catalog (for the plan check,
+    # which needs no dependencies) and runs no app code: just the packer bundle,
+    # on artifact data that must match the plan before it is signed.
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJSON(needs.plan.outputs.apps) }}
+    steps:
+      - name: Require APPFLARE_SIGNING_KEY
+        working-directory: .
+        env:
+          APPFLARE_SIGNING_KEY: ${{ secrets.APPFLARE_SIGNING_KEY }}
+        run: |
+          if [ -z "${APPFLARE_SIGNING_KEY}" ]; then
+            echo "::error title=APPFLARE_SIGNING_KEY is not set::Publishing signs every artifact. Add the catalog signing key (base64 PKCS#8 Ed25519; key id catalog-2026-09, or the keyId in the APPFLARE_PUBLIC_KEY variable) as the APPFLARE_SIGNING_KEY secret of this repository or its organization, then re-run this workflow."
+            exit 1
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: catalog
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: catalog/.node-version
+      - name: Download the packer bundle
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: appflare-packer
+          path: ${{ runner.temp }}/appflare-packer
+      - name: Download the publish plan
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: publish-plan
+          path: ${{ runner.temp }}/plan
+      - name: Download exactly unsigned-<slug>
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: unsigned-${{ matrix.app }}
+          path: catalog/dist/${{ matrix.app }}
+      - name: Check against the plan, verify hashes, sign, check and verify again
+        env:
+          APP: ${{ matrix.app }}
+          APPFLARE_SIGNING_KEY: ${{ secrets.APPFLARE_SIGNING_KEY }}
+          EXPECTED_PACKER_SHA256: ${{ needs.build-packer.outputs.packer-sha256 }}
+        run: |
+          set -euo pipefail
+          bundle="${RUNNER_TEMP}/appflare-packer/appflare-packer.tgz"
+          # Only run the bundle build-packer produced (its sha256 is a job output,
+          # which the pack job cannot change).
+          actual="$(sha256sum "${bundle}" | cut -d' ' -f1)"
+          if ! [[ "${EXPECTED_PACKER_SHA256}" =~ ^[0-9a-f]{64}$ ]] || [ "${actual}" != "${EXPECTED_PACKER_SHA256}" ]; then
+            echo "::error title=Packer bundle mismatch::appflare-packer.tgz has sha256 ${actual}, but build-packer produced ${EXPECTED_PACKER_SHA256:-(nothing)}. Refusing to run it."
+            exit 1
+          fi
+          mkdir -p "${RUNNER_TEMP}/appflare"
+          tar -xzf "${bundle}" -C "${RUNNER_TEMP}/appflare"
+          pack="${RUNNER_TEMP}/appflare/packages/pack/bin/appflare-pack.js"
+          plan="${RUNNER_TEMP}/plan/publish-plan.json"
+          key_id="$(node scripts/signing-key.ts key-id)"
+          public_key="$(node scripts/signing-key.ts public-key)"
+          trusted=()
+          if [ -n "${public_key}" ]; then
+            trusted=(--public-key "${public_key}")
+          fi
+          node scripts/check-manifest-plan.ts --plan "${plan}" --root dist --slug "${APP}" --unsigned
+          node "${pack}" verify "dist/${APP}" --hashes-only --check-upload
+          node "${pack}" sign "dist/${APP}" --sign-key-env APPFLARE_SIGNING_KEY --key-id "${key_id}"
+          node scripts/check-manifest-plan.ts --plan "${plan}" --root dist --slug "${APP}" --signed
+          # Against the keys embedded in @appflare/schema at .appflare-ref, as the
+          # manager verifies, or against the catalog's own key when it has one.
+          node "${pack}" verify "dist/${APP}" --require-signed --check-upload "${trusted[@]}"
+      - name: Upload exactly signed-<slug>
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: signed-${{ matrix.app }}
+          path: catalog/dist/${{ matrix.app }}
+          if-no-files-found: error
+          retention-days: 7
+
+  sign-revisions:
+    name: sign revisions
+    needs: [build-packer, plan]
+    if: needs.plan.outputs.revisions != '[]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # Holds the signing key, like sign, which runs per packed app and is skipped
+    # when nothing is packed (a revision packs nothing). Runs no app code: the
+    # catalog's own scripts and the packer bundle's @appflare/schema, with
+    # plain node and nothing installed. Signs only the bytes of
+    # apps/<slug>/manifest.json whose revision and sha256 the plan approved,
+    # with the key id the release was signed with.
+    permissions:
+      contents: read
+    steps:
+      - name: Require APPFLARE_SIGNING_KEY
+        working-directory: .
+        env:
+          APPFLARE_SIGNING_KEY: ${{ secrets.APPFLARE_SIGNING_KEY }}
+        run: |
+          if [ -z "${APPFLARE_SIGNING_KEY}" ]; then
+            echo "::error title=APPFLARE_SIGNING_KEY is not set::Publishing signs every revised catalog manifest. Add the catalog signing key (base64 PKCS#8 Ed25519; key id catalog-2026-09, or the keyId in the APPFLARE_PUBLIC_KEY variable) as the APPFLARE_SIGNING_KEY secret of this repository or its organization, then re-run this workflow."
+            exit 1
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: catalog
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: catalog/.node-version
+      - name: Download the packer bundle
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: appflare-packer
+          path: ${{ runner.temp }}/appflare-packer
+      - name: Download the publish plan
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: publish-plan
+          path: ${{ runner.temp }}/plan
+      - name: Check against the plan, sign, and verify with the trusted keys
+        env:
+          APPFLARE_SIGNING_KEY: ${{ secrets.APPFLARE_SIGNING_KEY }}
+          EXPECTED_PACKER_SHA256: ${{ needs.build-packer.outputs.packer-sha256 }}
+        run: |
+          set -euo pipefail
+          bundle="${RUNNER_TEMP}/appflare-packer/appflare-packer.tgz"
+          actual="$(sha256sum "${bundle}" | cut -d' ' -f1)"
+          if ! [[ "${EXPECTED_PACKER_SHA256}" =~ ^[0-9a-f]{64}$ ]] || [ "${actual}" != "${EXPECTED_PACKER_SHA256}" ]; then
+            echo "::error title=Packer bundle mismatch::appflare-packer.tgz has sha256 ${actual}, but build-packer produced ${EXPECTED_PACKER_SHA256:-(nothing)}. Refusing to run it."
+            exit 1
+          fi
+          mkdir -p "${RUNNER_TEMP}/appflare"
+          tar -xzf "${bundle}" -C "${RUNNER_TEMP}/appflare"
+          mkdir -p revision-signatures
+          key_id="$(node scripts/signing-key.ts key-id)"
+          APPFLARE_DIR="${RUNNER_TEMP}/appflare" node scripts/sign-revisions.ts \
+            --plan "${RUNNER_TEMP}/plan/publish-plan.json" \
+            --out revision-signatures/revision-signatures.json \
+            --sign-key-env APPFLARE_SIGNING_KEY --key-id "${key_id}"
+      - name: Upload the signatures
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: revision-signatures
+          path: catalog/revision-signatures/revision-signatures.json
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    name: release and index
+    needs: [build-packer, plan, pack, sign, sign-revisions]
+    # Runs when sign succeeded or was skipped (nothing to publish), never after a failure.
+    if: ${{ !cancelled() && !failure() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      # gh release create; the index.json push uses CATALOG_PUSH_KEY instead.
+      contents: write
+      # gh run download of this run's signed-<slug> artifacts.
+      actions: read
+    steps:
+      # main's ruleset requires status checks on every push and lets only
+      # repository admins and deploy keys bypass them, so a push with the
+      # workflow token is rejected. The index.json commit is pushed over SSH
+      # with CATALOG_PUSH_KEY, a deploy key with write access, instead.
+      # With ssh-key, origin is the SSH URL and core.sshCommand points at the
+      # key until the job ends, which is what persist-credentials keeps. Every
+      # later step can read the key, so this job runs no app code: only the
+      # catalog's own scripts, the packer bundle, and gh. The whole history
+      # (fetch-depth: 0): build-index dates each row's addedAt by the commit
+      # that added its appflare.jsonc, and refuses a shallow clone.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: catalog
+          ref: main
+          fetch-depth: 0
+          ssh-key: ${{ secrets.CATALOG_PUSH_KEY }}
+          persist-credentials: true
+      - uses: ./catalog/.github/actions/use-packer
+        with:
+          sha256: ${{ needs.build-packer.outputs.packer-sha256 }}
+      - name: Download the publish plan
+        if: needs.plan.outputs.apps != '[]'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: publish-plan
+          path: ${{ runner.temp }}/plan
+      - name: Download each planned signed-<slug> into dist/signed-<slug>
+        if: needs.plan.outputs.apps != '[]'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PLANNED_APPS: ${{ needs.plan.outputs.apps }}
+        run: |
+          set -euo pipefail
+          # Not actions/download-artifact with a pattern: it nests each artifact in
+          # its own directory only when two or more match, and puts a single
+          # match's files straight into the target. Downloading by exact name
+          # into an explicit directory gives the same layout for any count.
+          rm -rf dist
+          mkdir -p dist
+          mapfile -t slugs < <(jq -r '.[]' <<< "${PLANNED_APPS}")
+          for slug in "${slugs[@]}"; do
+            # With exactly one --name, gh extracts the files directly into --dir.
+            gh run download "${GITHUB_RUN_ID}" --repo "${GITHUB_REPOSITORY}" \
+              --name "signed-${slug}" --dir "dist/signed-${slug}"
+          done
+      - name: Check against the plan, verify, and create GitHub Releases
+        if: needs.plan.outputs.apps != '[]'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PLANNED_APPS: ${{ needs.plan.outputs.apps }}
+        run: |
+          set -euo pipefail
+          pack="${APPFLARE_DIR}/packages/pack/bin/appflare-pack.js"
+          plan="${RUNNER_TEMP}/plan/publish-plan.json"
+          public_key="$(node scripts/signing-key.ts public-key)"
+          trusted=()
+          if [ -n "${public_key}" ]; then
+            trusted=(--public-key "${public_key}")
+          fi
+          # Every planned slug present as dist/signed-<slug>, nothing else, each matching the plan.
+          node scripts/check-manifest-plan.ts --plan "${plan}" --root dist --prefix signed- --signed
+          mapfile -t slugs < <(jq -r '.[]' <<< "${PLANNED_APPS}")
+          if [ "$(jq -r '.apps | keys | join(" ")' "${plan}")" != "${slugs[*]}" ]; then
+            echo "::error::the plan file and the plan job's output disagree"
+            exit 1
+          fi
+          for slug in "${slugs[@]}"; do
+            dir="dist/signed-${slug}"
+            version="$(jq -r --arg s "${slug}" '.apps[$s].version' "${plan}")"
+            if [ "$(jq -r .app "${dir}/manifest.json")" != "${slug}" ] || [ "$(jq -r .version "${dir}/manifest.json")" != "${version}" ]; then
+              echo "::error::${dir}/manifest.json is not ${slug}@${version}"
+              exit 1
+            fi
+            node "${pack}" verify "${dir}" --require-signed --check-upload "${trusted[@]}"
+            tag="${slug}@${version}"
+            local_sha="$(sha256sum "${dir}/manifest.json" | cut -d' ' -f1)"
+            if state="$(gh release view "${tag}" --json isDraft,isPrerelease,assets --jq '[(.isDraft | tostring), (.isPrerelease | tostring), ([.assets[].name] | sort | join(","))] | join(" ")' 2> /dev/null)"; then
+              expected="$(printf '%s\n' "${slug}-${version}.zip" manifest.json manifest.sig | LC_ALL=C sort | paste -sd, -)"
+              if [ "${state}" != "false false ${expected}" ]; then
+                echo "::error::release ${tag} exists but is a draft, a prerelease, or incomplete (${state}); fix or delete it by hand"
+                exit 1
+              fi
+              # A re-run after a partial failure: the release is already there
+              # with these exact bytes, so move on to the index and Pages.
+              remote_sha="$(gh release download "${tag}" --pattern manifest.json --output - | sha256sum | cut -d' ' -f1)"
+              if [ "${remote_sha}" = "${local_sha}" ]; then
+                echo "::notice::${tag} already released with the same manifest.json; skipping"
+                continue
+              fi
+              echo "::error::release ${tag} exists with a different manifest.json (released sha256 ${remote_sha}, this run ${local_sha}); fix or delete it by hand"
+              exit 1
+            fi
+            # The pin is recorded in the catalog manifest packed into the artifact.
+            source="$(jq -r '.catalog.repo + "@" + .catalog.source.sha + " (" + .catalog.source.ref + ")"' "${dir}/manifest.json")"
+            gh release create "${tag}" \
+              "${dir}/${slug}-${version}.zip" "${dir}/manifest.json" "${dir}/manifest.sig" \
+              --target "${GITHUB_SHA}" \
+              --title "${tag}" \
+              --notes "Built from ${source}. manifest.json sha256: ${local_sha}."
+          done
+      - name: Download the revision signatures
+        if: needs.plan.outputs.revisions != '[]'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: revision-signatures
+          path: ${{ runner.temp }}/revision-signatures
+      # A deploy key's push starts push workflows (conventions runs on every
+      # push to main); [skip ci] in the message keeps it from doing so.
+      - name: Rebuild and commit index.json
+        uses: ./catalog/.github/actions/commit-index
+        with:
+          github-token: ${{ github.token }}
+          message: "chore: update index.json [skip ci]"
+          revision-signatures: ${{ needs.plan.outputs.revisions != '[]' && format('{0}/revision-signatures/revision-signatures.json', runner.temp) || '' }}
+      # index.json, schema/v1.json, apps/<slug>/manifest.json for each row
+      # with a build block, and every entry's images and featured image, all
+      # checked against the digests in index.json. stats.json is the one
+      # currently live: the stats workflow owns it, and a publish must not
+      # remove it.
+      - name: Assemble the Pages site
+        run: pnpm -s build-site --out site --live-stats
+      # The stats workflow redeploys exactly this site with a new stats.json,
+      # so it never rebuilds (or rolls back) anything else.
+      - name: Keep the site for the stats workflow
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: catalog-site
+          path: catalog/site
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: catalog/site
+
+  pages:
+    name: deploy Pages
+    needs: release
+    if: ${{ !cancelled() && needs.release.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    # Shared with nightly and stats: one Pages deploy at a time.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  docs:
+    name: rebuild docs
+    needs: pages
+    if: ${{ !cancelled() && needs.pages.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    # No checkout and no code from either repository: one API call that starts
+    # the docs site workflow in appflare/appflare, which builds main against
+    # whatever this catalog now serves. The workflow token gets no permissions;
+    # the call uses DOCS_REBUILD_TOKEN, and without it the job only says so.
+    permissions: {}
+    steps:
+      - name: Start the docs site workflow
+        working-directory: .
+        env:
+          DOCS_REBUILD_TOKEN: ${{ secrets.DOCS_REBUILD_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DOCS_REBUILD_TOKEN}" ]; then
+            echo "::notice title=Docs rebuild skipped::docs rebuild skipped: DOCS_REBUILD_TOKEN is not set"
+            exit 0
+          fi
+          # The header goes in on stdin (printf is a shell builtin), so the
+          # token is never in a process's arguments or in the log.
+          printf 'Authorization: Bearer %s\n' "${DOCS_REBUILD_TOKEN}" |
+            curl --fail-with-body --silent --show-error --retry 3 --max-time 30 \
+              -X POST \
+              -H @- \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              --data '{"ref":"main"}' \
+              https://api.github.com/repos/appflare/appflare/actions/workflows/docs.yml/dispatches
+          echo "started the docs site workflow on appflare/appflare main"

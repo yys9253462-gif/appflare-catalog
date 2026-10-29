@@ -1,0 +1,77 @@
+name: Rebuild and commit index.json
+description: >
+  Updates index.json on top of the current main and pushes it, retrying when
+  main moved in between (publish and nightly both write it). With no
+  verified-file it rebuilds the index from the GitHub Releases (build-index
+  --releases-only); with one it only patches lastVerified into the existing rows
+  (record-verified), never adding or removing apps. Expects the catalog checked
+  out at ./catalog by actions/checkout with ssh-key set to the CATALOG_PUSH_KEY
+  secret and persist-credentials true, and APPFLARE_DIR set (use-packer); to
+  rebuild, with fetch-depth 0 as well, since build-index reads each entry's
+  addedAt from the whole history and refuses a shallow clone. git
+  fetches and pushes over SSH with that key, never with the workflow token:
+  main's ruleset requires status checks on every push and lets only repository
+  admins and deploy keys bypass them.
+inputs:
+  github-token:
+    description: Token for the GitHub Releases lookups of build-index; not used by git.
+    required: true
+  message:
+    description: Commit message.
+    required: true
+  verified-file:
+    description: JSON of install checks that passed; switches to patching lastVerified only.
+    required: false
+    default: ""
+  revision-signatures:
+    description: >
+      JSON of revised catalog manifest signatures (sign-revisions --out), passed
+      to build-index; without it a revised row keeps its previous signature while
+      its bytes are the same.
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Rebuild and push index.json
+      shell: bash
+      working-directory: catalog
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        MESSAGE: ${{ inputs.message }}
+        VERIFIED_FILE: ${{ inputs.verified-file }}
+        REVISION_SIGNATURES: ${{ inputs.revision-signatures }}
+      run: |
+        set -euo pipefail
+        origin="$(git remote get-url origin)"
+        if [[ "${origin}" != git@* ]]; then
+          echo "::error title=CATALOG_PUSH_KEY not in use::origin is ${origin}, not an SSH URL, so the push to main would be rejected. Set the CATALOG_PUSH_KEY secret and check out the catalog with ssh-key set to it and persist-credentials true (checkout falls back to HTTPS when the secret is empty)."
+          exit 1
+        fi
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        if [ -n "${VERIFIED_FILE}" ]; then
+          update=(record-verified --verified "${VERIFIED_FILE}")
+        else
+          update=(build-index --releases-only)
+          if [ -n "${REVISION_SIGNATURES}" ]; then
+            update+=(--revision-signatures "${REVISION_SIGNATURES}")
+          fi
+        fi
+        for attempt in 1 2 3; do
+          git fetch --quiet origin main
+          git reset --quiet --hard origin/main
+          pnpm -s "${update[@]}"
+          if git diff --quiet -- index.json; then
+            echo "index.json unchanged"
+            exit 0
+          fi
+          git add index.json
+          git commit --quiet -m "${MESSAGE}"
+          if git push --quiet origin HEAD:main; then
+            exit 0
+          fi
+          echo "main moved while committing (attempt ${attempt}); rebuilding on top of it"
+        done
+        echo "::error::could not push index.json after 3 attempts"
+        exit 1

@@ -1,0 +1,155 @@
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { parseArgs } from "node:util";
+import { gitIn, previousAddedTimes, readAddedTimes } from "./lib/added-at.ts";
+import { loadAppflareSchema } from "./lib/appflare-schema.ts";
+import { listApps, loadManifest } from "./lib/apps.ts";
+import { catalogRepo, info, runMain, warn } from "./lib/cli.ts";
+import { readFeatured } from "./lib/featured.ts";
+import { createGhReleaseLookup } from "./lib/github-releases.ts";
+import {
+  buildIndexApps,
+  finalizeIndex,
+  previousRows,
+  serializeIndex,
+  statsUrl,
+} from "./lib/index-builder.ts";
+import { mediaReader } from "./lib/media.ts";
+import { appsDir, catalogRoot, distDir, indexFile, resolveAppflareDir } from "./lib/paths.ts";
+import { parseRevisionSignatures } from "./lib/revision.ts";
+import { pagesBaseUrl } from "./lib/sandbox-entry.ts";
+import { createVersionResolver, loadPackerVersioning } from "./lib/versions.ts";
+
+const USAGE = `Usage: pnpm build-index [--releases-only] [--out <file>]
+
+Validates every apps/<slug>/appflare.jsonc and writes index.json.
+A sandbox or self-deploying tier entry is listed with a build block instead of
+an artifact: its pin, the URL and sha256 of its catalog manifest as build-site
+publishes it, and the size and time of a run in the sandbox Worker.
+Each artifact tier app's version and artifacts (release URLs and the sha256 of
+its manifest.json) come from dist/<slug>/manifest.json when it was built from
+the current pin, otherwise from the GitHub Release <slug>@<version> for the
+version the current pin packs to (via gh api), provided the catalog manifest
+packed into it has the same source.sha. When that release does not exist
+yet, the previous index's row for the app is kept as it was (only its images
+are rebuilt), so an app whose bump landed while publish was running stays
+listed at its last released version; a row that lists a revised catalog
+manifest is not kept. Otherwise the app is omitted with a warning.
+
+  --releases-only   ignore dist/; fail if the release lookup fails or the
+                    catalog's git history is shallow (publish CI)
+  --out <file>      output path (default: index.json)
+  --revision-signatures <file>
+                    signatures of revised catalog manifests (sign-revisions --out)
+
+Every row carries the manifest's revision. When an artifact tier app's revision
+is above the one its release was built with, the row also lists the revised
+catalog manifest (its URL on the Pages site, sha256, key id and signature), which
+build-site publishes at apps/<slug>/manifest.json. The signature comes from
+--revision-signatures, or from the previous index while the bytes are the same.
+A revision that changes anything but the form and copy, or that no signature
+covers, is refused (fatal with --releases-only, else the app is omitted).
+
+lastVerified carries over from the previous index while an app's version and
+digest (manifestDigest for a sandbox or self-deploying entry) stay the same, and is null for a
+new one.
+
+Every row lists the app's categories and the Cloudflare services it uses:
+worked out from the published artifact manifest (its Worker's bindings, queue
+consumers, crons and Durable Object migrations, plus the catalog manifest packed
+into it) for an artifact tier entry, from the catalog manifest's declarations
+for a sandbox or self-deploying one.
+
+Every row lists the entry's tagline and license, and its licenseNote, features
+and alternativeTo when it has them, from the current appflare.jsonc, and
+addedAt: the committer time of the oldest commit that added
+apps/<slug>/appflare.jsonc (the time of this build for an entry not committed
+yet). That needs the whole git history; in a shallow clone
+the rows keep the addedAt of the previous index, with a warning (fatal with
+--releases-only).
+
+A row with images lists them (apps/<slug>/icon.svg|icon.png, cover.png,
+screenshots/*.png, each optional) by their Pages URL and sha256. The index carries
+the sponsored items of featured.json (always written, even when empty) and the
+URL of stats.json, which the stats workflow publishes next to it.
+`;
+
+runMain(async () => {
+  const { values } = parseArgs({
+    options: {
+      "releases-only": { type: "boolean" },
+      out: { type: "string" },
+      "revision-signatures": { type: "string" },
+      help: { type: "boolean", short: "h" },
+    },
+  });
+  if (values.help) {
+    process.stdout.write(USAGE);
+    return 0;
+  }
+  const releasesOnly = values["releases-only"] === true;
+  const outPath = values.out ? path.resolve(values.out) : indexFile;
+
+  const appflareDir = resolveAppflareDir();
+  const schema = await loadAppflareSchema(appflareDir);
+  const versions = createVersionResolver(await loadPackerVersioning(appflareDir));
+  const manifests = listApps(appsDir).map((app) => loadManifest(app, schema.catalogManifest));
+  const repo = catalogRepo();
+  const previous = existsSync(outPath) ? readFileSync(outPath, "utf8") : null;
+  const previousApps = previousRows(previous);
+  let addedAt: Map<string, string>;
+  try {
+    addedAt = readAddedTimes(gitIn(catalogRoot));
+  } catch (err) {
+    if (releasesOnly) throw err;
+    warn(
+      `keeping the previous index's addedAt: ${err instanceof Error ? err.message : String(err)}`,
+    );
+    addedAt = previousAddedTimes(previousApps);
+  }
+
+  const now = new Date();
+  const apps = buildIndexApps(manifests, {
+    repo,
+    distDir: releasesOnly ? null : distDir,
+    releases: createGhReleaseLookup(repo),
+    versions,
+    strictReleases: releasesOnly,
+    artifactManifest: schema.artifactManifest,
+    warn,
+    previousApps,
+    addedAt,
+    builtAt: now.toISOString(),
+    sandboxDefaults: schema.sandboxDefaults,
+    mediaFor: mediaReader(appsDir, repo),
+    services: schema.appServices,
+    indexRequires: schema.indexRequires,
+    workerFacts: schema.appWorkerFacts,
+    revisionProblem: schema.revisionProblem,
+    ...(values["revision-signatures"] === undefined
+      ? {}
+      : {
+          revisionSignatures: parseRevisionSignatures(
+            JSON.parse(readFileSync(path.resolve(values["revision-signatures"]), "utf8")),
+          ),
+        }),
+  });
+  const index = finalizeIndex(apps, previous, now, schema.indexJson, {
+    featured: readFeatured(catalogRoot, repo, schema.featuredItem).items,
+    stats: statsUrl(pagesBaseUrl(repo)),
+  });
+  writeFileSync(outPath, serializeIndex(index));
+  info(`wrote ${outPath}: ${index.apps.length} of ${manifests.length} apps listed`);
+  for (const app of index.apps) {
+    const where =
+      app.build === undefined
+        ? `${app.slug}@${app.version} digest=${app.artifacts?.digest}${
+            app.catalogManifest === undefined
+              ? ""
+              : ` revision ${app.revision}: revised catalog manifest sha256=${app.catalogManifest.sha256}`
+          }`
+        : `${app.slug}@${app.version} ${app.tier}: runs in the user's sandbox Worker at ${app.build.pin.slice(0, 12)}, manifestDigest=${app.build.manifestDigest}`;
+    info(`${where} services=${app.services.join(",") || "(none)"}`);
+  }
+  return 0;
+});

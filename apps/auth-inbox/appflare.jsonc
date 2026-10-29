@@ -1,0 +1,161 @@
+{
+  "$schema": "https://appflare.github.io/catalog/schema/v1.json",
+  "slug": "auth-inbox",
+  "name": "Auth Inbox",
+  "summary": "An inbox for sign-up and verification mail: Email Routing delivers it, an AI model of your choice pulls out codes and links and sorts each mail, and a dashboard, per-user grants and a remote MCP server let people and agents read them.",
+  "tagline": "Get sign-up codes and links in one private inbox",
+  "features": [
+    "Extract email codes and links using your chosen AI provider and API key",
+    "Copy a code or verification link with one click",
+    "Sort received mail into sign-in, password reset and other categories",
+    "Choose which addresses and mail categories each user can read",
+    "Let AI agents wait for new codes with their own access keys",
+    "Store promotional mail without sending it to the AI provider"
+  ],
+  "repo": "TooonyChen/AuthInbox",
+  "license": "MIT",
+  "categories": ["email", "ai"],
+  // Edited help text (revision 2), field links (revision 3) and the formatting of
+  // URLs in the notes (revision 4) came after this release was published:
+  // revisions, no new build.
+  // Display features (revision 5).
+  "revision": 5,
+  "authors": [{ "name": "Tony Chen", "url": "https://tonychen.net", "github": "TooonyChen" }],
+  "maintainers": ["MendyLanda"],
+  // Upstream has no release tags, so the entry follows the default branch by commit.
+  "source": { "ref": "main", "sha": "83927b8b2b37bb61a53db69017c05a13570be89d" },
+  "install": {
+    // A pnpm workspace: the Worker at the root, the React dashboard in web/.
+    "packageManager": "pnpm",
+    // Upstream's config template, copied to wrangler.toml before it is read,
+    // as its setup guide says. The placeholder D1 id is dropped when the
+    // artifact is packed. The optional OAUTH_KV namespace is commented out
+    // upstream, so OAuth for remote MCP connectors stays off and /mcp takes
+    // the app's own API keys.
+    "wranglerConfig": "wrangler.toml.example",
+    // Upstream's `build:web`: the dashboard the Worker serves as static assets.
+    "buildCommand": "pnpm --filter auth-inbox-web run build",
+    // Unauthenticated and reads D1: it reports whether the first admin still
+    // has to be created.
+    "health": { "path": "/api/auth/setup" },
+    // Upstream's setup guide sends the zone's catch-all to the Worker, so any
+    // address of the domain can be handed out for a sign-up.
+    "emailRouting": { "catchAll": true }
+  },
+  // Receiving mail and D1 fit the free plan. Code extraction calls an AI
+  // provider outside Cloudflare with your own key, and skips promotional
+  // mail before it does.
+  "plan": "free",
+  "requires": ["zone", "email-routing"],
+  // The wrangler config sets AI_API_KEY in [vars] to a placeholder; as a
+  // secret here, that var is left out of the artifact.
+  "secrets": [
+    {
+      "name": "JWT_SECRET",
+      "label": "Session signing key",
+      "help": "Signs dashboard sign-in sessions. Setting a new value signs everyone out.",
+      "generate": "password"
+    },
+    {
+      "name": "AI_API_KEY",
+      "label": "AI API key",
+      "help": "The API key of your AI provider (Google AI Studio, OpenAI, Anthropic, DeepSeek, Groq and others), for the base URL and model below.",
+      "link": { "label": "Get a Gemini key", "url": "https://aistudio.google.com/app/apikey" }
+    },
+    {
+      "name": "AI_FALLBACK_API_KEY",
+      "label": "Fallback AI API key",
+      "help": "The key for a second provider, used after the primary one fails three times. The fallback also needs its base URL and model below.",
+      "optional": true
+    }
+  ],
+  "vars": [
+    {
+      "name": "AI_BASE_URL",
+      "label": "AI base URL",
+      "help": "Your provider's API base URL, without a trailing slash. OpenAI: https://api.openai.com. Anthropic: https://api.anthropic.com. DeepSeek: https://api.deepseek.com. Groq: https://api.groq.com/openai. The default is Gemini's OpenAI-compatible endpoint.",
+      "default": "https://generativelanguage.googleapis.com/v1beta/openai"
+    },
+    {
+      "name": "AI_API_FORMAT",
+      "label": "AI request format",
+      "help": "How the app talks to the provider.",
+      "type": "select",
+      "options": [
+        { "value": "openai", "label": "Chat Completions (OpenAI, Gemini, DeepSeek, Groq)" },
+        { "value": "responses", "label": "OpenAI Responses API" },
+        { "value": "anthropic", "label": "Anthropic Messages" }
+      ],
+      "default": "openai",
+      "optional": true
+    },
+    {
+      "name": "AI_MODEL",
+      "label": "AI model",
+      "help": "The model ID, for example gemini-2.0-flash, gpt-4o-mini or claude-3-5-haiku-20241022.",
+      "default": "gemini-2.0-flash"
+    },
+    {
+      "name": "AI_FALLBACK_BASE_URL",
+      "label": "Fallback AI base URL",
+      "help": "The base URL of the fallback provider.",
+      "optional": true
+    },
+    {
+      "name": "AI_FALLBACK_API_FORMAT",
+      "label": "Fallback AI request format",
+      "help": "Only used when a fallback provider is set.",
+      "type": "select",
+      "options": [
+        { "value": "openai", "label": "Chat Completions (OpenAI, Gemini, DeepSeek, Groq)" },
+        { "value": "responses", "label": "OpenAI Responses API" },
+        { "value": "anthropic", "label": "Anthropic Messages" }
+      ],
+      "default": "openai",
+      "optional": true
+    },
+    {
+      "name": "AI_FALLBACK_MODEL",
+      "label": "Fallback AI model",
+      "help": "The model ID of the fallback provider.",
+      "optional": true
+    },
+    {
+      "name": "UseBark",
+      "label": "Bark notifications",
+      "help": "Push each new code to iOS devices through Bark (https://bark.day.app).",
+      "type": "select",
+      "options": [{ "value": "false", "label": "Off" }, { "value": "true", "label": "On" }],
+      "default": "false",
+      "optional": true
+    },
+    {
+      "name": "barkTokens",
+      "label": "Bark device tokens",
+      "help": "The device tokens from the Bark app, in brackets and comma separated, for example [token1, token2]. Only used when Bark notifications are on.",
+      "link": { "label": "Get the Bark app", "url": "https://bark.day.app/" },
+      "optional": true
+    },
+    {
+      "name": "barkUrl",
+      "label": "Bark server URL",
+      "help": "The Bark server to push through; your own if you run one.",
+      "default": "https://api.day.app",
+      "optional": true
+    }
+  ],
+  "postInstall": [
+    {
+      "type": "markdown",
+      "content": "Open {{appUrl}} right away: while no account exists, the sign-in page lets anyone create the first admin account, so create yours before sharing the address."
+    },
+    {
+      "type": "markdown",
+      "content": "Every address of the zone you picked now reaches the app. Use any of them for a sign-up, and the code or link shows up in the dashboard. Promotional mail is kept without calling the AI provider."
+    },
+    {
+      "type": "markdown",
+      "content": "AI agents connect to `{{appUrl}}/mcp` with an API key created in the dashboard (Claude Code, Cursor and other clients that send a header)."
+    }
+  ]
+}

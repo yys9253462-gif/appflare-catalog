@@ -1,0 +1,2 @@
+- `icon.png`: Scaled from [`web/public/logo-light.png`](https://github.com/haradakashiwa/ternssh/blob/b3d2b6c7c0ad00496d79e07c36532d549cd5e73a/web/public/logo-light.png) at 154x150 to fit 176 px, then padded onto a white rounded 256x256 square.
+- `screenshots/01-dashboard.png`: Scaled from [`docs/preview-light.png`](https://github.com/haradakashiwa/ternssh/blob/b3d2b6c7c0ad00496d79e07c36532d549cd5e73a/docs/preview-light.png) at 4928 px wide to 1600 px wide.

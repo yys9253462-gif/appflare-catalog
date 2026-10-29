@@ -1,0 +1,11 @@
+# Media for shrtnr
+
+Upstream: [`oddbit/shrtnr`](https://github.com/oddbit/shrtnr) at commit [`745fc5cd586550ca203b900a7718ce61ef064efb`](https://github.com/oddbit/shrtnr/tree/745fc5cd586550ca203b900a7718ce61ef064efb), licensed [Apache-2.0](https://github.com/oddbit/shrtnr/blob/745fc5cd586550ca203b900a7718ce61ef064efb/LICENSE). The project's [NOTICE](https://github.com/oddbit/shrtnr/blob/745fc5cd586550ca203b900a7718ce61ef064efb/NOTICE) also applies to repository files.
+
+- `screenshots/01-dashboard.png`: [`docs/images/dashboard-30d.png`](https://github.com/oddbit/shrtnr/blob/745fc5cd586550ca203b900a7718ce61ef064efb/docs/images/dashboard-30d.png), from the README. Metadata removed; pixels unchanged (1600x970).
+- `screenshots/02-link-analytics.png`: [`docs/images/link-details-30d.png`](https://github.com/oddbit/shrtnr/blob/745fc5cd586550ca203b900a7718ce61ef064efb/docs/images/link-details-30d.png), from the README. Metadata removed; pixels unchanged (1600x970).
+- `screenshots/03-bundle-analytics.png`: [`docs/images/bundle-details-30d.png`](https://github.com/oddbit/shrtnr/blob/745fc5cd586550ca203b900a7718ce61ef064efb/docs/images/bundle-details-30d.png), from the README. Metadata removed; pixels unchanged (1600x970).
+- `screenshots/04-bundles.png`: [`docs/images/bundles-30d.png`](https://github.com/oddbit/shrtnr/blob/745fc5cd586550ca203b900a7718ce61ef064efb/docs/images/bundles-30d.png), from the README. Metadata removed; pixels unchanged (1600x970).
+- `screenshots/05-api-keys.png`: [`docs/images/api-keys.png`](https://github.com/oddbit/shrtnr/blob/745fc5cd586550ca203b900a7718ce61ef064efb/docs/images/api-keys.png), from the README. Metadata removed; pixels unchanged (1600x970).
+
+Left out: `public/logo-*.svg`, `public/logotype-*.svg` and `public/icon-*.png` are standalone project branding. The [trademark policy](https://github.com/oddbit/shrtnr/blob/745fc5cd586550ca203b900a7718ce61ef064efb/TRADEMARK_POLICY.md) restricts promotional use of the project's name and logo, so no standalone icon is included. The site's [og-image](https://oddbit.id/images/shrtnr/og-image.png) is a crop of `screenshots/01-dashboard.png`, so there is no distinct cover. `docs/images/claude-mcp.webp` shows another company's product. Browser extension assets show a companion product.

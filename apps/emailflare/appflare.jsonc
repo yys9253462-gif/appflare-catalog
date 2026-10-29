@@ -1,0 +1,150 @@
+{
+  // Upstream's two Cloudflare Workers, which share one D1 database: the
+  // sending API with its admin dashboard, and the team inbox with its CRM.
+  // The email-bridge and inbox-bridge Workers only forward mail to upstream's
+  // Docker deployment and are not part of this entry. Each Worker declares
+  // its rate limit in `unsafe.bindings`, which is installed as a rate limit
+  // binding. Both bind RATE_LIMIT_KV (login attempts per IP), which is one
+  // namespace here, where upstream's setup creates one per Worker.
+  "$schema": "https://appflare.github.io/catalog/schema/v1.json",
+  "slug": "emailflare",
+  "name": "EmailFlare",
+  "summary": "Transactional email on Cloudflare Email Sending: a sending API with templates, API keys, logs, suppressions and one-click unsubscribe, plus a team inbox and lightweight CRM on Email Routing.",
+  "tagline": "Send emails and manage replies in a shared inbox",
+  "features": [
+    "Send transactional emails through Cloudflare Email Sending",
+    "Reuse email templates for welcomes, receipts and password resets",
+    "Create API keys for each app that sends mail",
+    "Review sent emails in the dashboard",
+    "Assign email conversations to teammates",
+    "Follow up with contacts through automated email sequences"
+  ],
+  "alternativeTo": ["Resend", "Front"],
+  "homepage": "https://emailflare.dev",
+  "repo": "0xdps/emailflare",
+  "license": "MIT",
+  "categories": ["email", "business"],
+  // Help text edited after this release was published: a revision, no new build.
+  "revision": 4,
+  "authors": [{ "name": "Devendra Pratap Singh", "github": "0xdps", "x": "0xdps" }],
+  "maintainers": ["MendyLanda"],
+  // Pinned to main: the latest tag, v2.0.2, predates the Workers deployment
+  // (it has neither Worker config).
+  "source": { "ref": "trunk", "sha": "7065a54a29d9a2deae492f0dcd2a7086536bd914" },
+  "install": {
+    "packageManager": "pnpm",
+    // Upstream's tracked configs; its setup script fills in the resource ids,
+    // which the artifact does not carry.
+    "wranglerConfig": "services/email-worker/wrangler.example.jsonc",
+    // Upstream's Workers deploy: the shared packages, then each dashboard,
+    // which its Worker serves as static assets.
+    "buildCommand": ["pnpm run build:shared", "pnpm run build:email-ui", "pnpm run build:inbox-ui"],
+    "workers": [
+      {
+        "name": "api",
+        "wranglerConfig": "services/email-worker/wrangler.example.jsonc",
+        "primary": true
+      },
+      { "name": "inbox", "wranglerConfig": "services/inbox-worker/wrangler.example.jsonc" }
+    ],
+    // Answers without a sign-in, from the Worker's own code.
+    "health": { "path": "/health" }
+  },
+  // D1, KV, R2, a queue, a SQLite Durable Object and one cron trigger fit the
+  // free plan, but sending is what the app is for, and Cloudflare Email
+  // Sending, which it sends through, needs Workers Paid.
+  "plan": "paid",
+  "requires": ["zone", "email-routing", "r2"],
+  "secrets": [
+    {
+      "name": "ADMIN_TOKEN",
+      "label": "Admin token",
+      "help": "Sign in to the sending API's dashboard with it.",
+      "generate": "password",
+      "workers": ["api"]
+    },
+    {
+      "name": "SESSION_SECRET",
+      "label": "Session secret",
+      "help": "Signs dashboard sessions of both Workers. Setting a new value signs everyone out.",
+      "generate": "password"
+    },
+    {
+      "name": "CF_API_TOKEN",
+      "label": "Cloudflare API token for EmailFlare",
+      "help": "A token you create for the app, separate from Appflare's, with the permissions listed below. The app sends mail through Email Sending with it, sets up sending domains, and points a domain's Email Routing at the inbox. Also give it Account Settings: Read so the dashboards' token card can show the account; without it the card says \"Unknown account\" and \"Account lookup failed\", while sending, domains and inbox routing still work.",
+      "cloudflareToken": true
+    }
+  ],
+  "vars": [
+    {
+      "name": "CF_ACCOUNT_ID",
+      "label": "Cloudflare account ID",
+      "help": "The account the app sends mail from: this one. Filled in on every install and update.",
+      "default": "{{accountId}}"
+    },
+    {
+      "name": "PUBLIC_URL",
+      "label": "Public URL",
+      "help": "Where one-click unsubscribe links point. Both Workers answer them from the shared database. Without it, lists get no unsubscribe header.",
+      "default": "{{appUrl}}",
+      "optional": true
+    },
+    {
+      "name": "INBOX_WORKER_NAME",
+      "label": "Inbox Worker name",
+      "help": "The Worker a new inbox's domain routes its mail to.",
+      "default": "{{workerName:inbox}}",
+      "workers": ["inbox"]
+    }
+  ],
+  "postInstall": [
+    {
+      "type": "markdown",
+      "content": "Open the inbox at {{appUrl:inbox}} right away: while it has no users, anyone who opens it can create the first account, which becomes its super admin."
+    },
+    {
+      "type": "markdown",
+      "content": "The sending API's dashboard is at {{appUrl}}; sign in with the admin token. Add a sending domain there, then create an API key and send with `POST {{appUrl}}/v1/send`."
+    },
+    {
+      "type": "markdown",
+      "content": "Adding an inbox for an address turns on Email Routing for its domain and points the domain's catch-all rule at the inbox Worker."
+    }
+  ],
+  // What the app's own Cloudflare API calls need: zone lookup, the DNS
+  // records of a sending domain, turning Email Routing on and setting the
+  // catch-all rule, and sending through Email Sending.
+  "tokenPermissions": [
+    {
+      "group": "Zone",
+      "scope": "zone",
+      "access": "read",
+      "reason": "Finds the zone of each domain you add."
+    },
+    {
+      "group": "DNS",
+      "scope": "zone",
+      "access": "edit",
+      "reason": "Reads and writes the records a sending domain needs."
+    },
+    {
+      "group": "Zone Settings",
+      "scope": "zone",
+      "access": "edit",
+      "reason": "Turns Email Routing on for an inbox's domain."
+    },
+    {
+      "group": "Email Routing Rules",
+      "scope": "zone",
+      "access": "edit",
+      "reason": "Points the domain's catch-all rule at the inbox Worker."
+    },
+    {
+      "group": "Email Sending",
+      "scope": "account",
+      "access": "edit",
+      "reason": "Sets up sending domains and sends mail."
+    }
+  ]
+}
