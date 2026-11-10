@@ -1,0 +1,66 @@
+{
+  "$schema": "https://appflare.github.io/catalog/schema/v1.json",
+  "slug": "wx2md",
+  "name": "wx2md",
+  "summary": "Turns WeChat Official Account articles, and any other web page, into clean Markdown or a readable HTML view: swap the article link's host for your Worker's, on Workers AI Markdown conversion.",
+  "tagline": "Turn WeChat articles and web pages into Markdown",
+  "features": [
+    "Convert a WeChat article by changing its link to your own address",
+    "Download converted articles as Markdown files",
+    "Read converted articles in an HTML view",
+    "Convert other web pages by providing their address"
+  ],
+  "homepage": "https://mp.084817.xyz",
+  "repo": "loadchange/wx2md-worker",
+  "license": "MIT",
+  "categories": ["utilities", "ai"],
+  // Edited help text (revision 2), field links (revision 3) and the formatting of
+  // URLs in the notes (revision 4) came after this release was published:
+  // revisions, no new build.
+  // Added features (revision 6), no new build.
+  "revision": 6,
+  "authors": [{ "name": "Asa", "github": "loadchange" }],
+  "maintainers": ["MendyLanda"],
+  // Upstream publishes no tags; the pin is the head of main.
+  "source": { "ref": "main", "sha": "3fa0184da7c8fe1f5315da82da7339389624d739" },
+  "install": {
+    "packageManager": "pnpm",
+    "wranglerConfig": "wrangler.jsonc",
+    "health": { "path": "/health" },
+    // The wrangler config points R2_PUBLIC_URL at upstream's own image domain,
+    // which an install cannot write to. Removing it leaves image rehosting off
+    // until the admin sets the var below. No upstream pull request yet.
+    "configPatch": { "vars": { "R2_PUBLIC_URL": null } }
+  },
+  // Workers AI's Markdown conversion of HTML is free, and the R2 bucket stays
+  // empty until image rehosting is turned on.
+  "plan": "free",
+  "requires": ["workers-ai", "r2"],
+  "vars": [
+    {
+      "name": "R2_PUBLIC_URL",
+      "label": "Public image address",
+      "help": "The public address of this install's R2 bucket (its r2.dev URL or a custom domain, without a trailing slash). When set, article images are copied to the bucket and linked from there, since WeChat blocks hotlinking. Leave empty to keep the original image links.",
+      "link": {
+        "label": "Open the dashboard",
+        "url": "https://dash.cloudflare.com/?to=/:account/r2/overview"
+      },
+      "default": "",
+      "optional": true
+    }
+  ],
+  "postInstall": [
+    {
+      "type": "markdown",
+      "content": "Replace `https://mp.weixin.qq.com` in an article link with `{{appUrl}}`, for example `{{appUrl}}/s/<article id>`. Use `/html/s/<article id>` for a readable page, add `?download=true` to download the Markdown, or convert any page with `{{appUrl}}/md?url=<address>`."
+    },
+    {
+      "type": "markdown",
+      "content": "To show article images, which WeChat does not serve to other sites: in the Cloudflare dashboard open R2, select the bucket `{{workerName}}-images-bucket`, turn on public access (r2.dev or a custom domain), and **add an object lifecycle rule that deletes objects after 1 day**, since the Worker never deletes the images it copies. Then set the public address in this app's settings."
+    },
+    {
+      "type": "markdown",
+      "content": "The Worker has no sign-in: anyone with its address can convert pages through it."
+    }
+  ]
+}

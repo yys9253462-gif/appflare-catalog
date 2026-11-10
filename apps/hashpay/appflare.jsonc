@@ -1,0 +1,70 @@
+{
+  // A crypto payment gateway run by a Telegram bot: merchants create orders
+  // through a signed REST API or inline in Telegram, buyers pay on-chain
+  // (TRON, Ethereum, Base, BNB Chain, Polygon, TON, Aptos, Solana) or
+  // through Binance, OKX or OKPay, a cron job every minute checks pending
+  // payments, and a queue delivers the merchants' callbacks. The Vue admin
+  // console also opens as a Telegram Mini App.
+  "$schema": "https://appflare.github.io/catalog/schema/v1.json",
+  "slug": "hashpay",
+  "name": "HashPay",
+  "summary": "A crypto payment gateway run from your own Telegram bot: take USDT, USDC and native coins on eight chains or through Binance, OKX and OKPay, with a signed order API, merchant callbacks and an admin console.",
+  "tagline": "Accept crypto payments through your Telegram bot",
+  "features": [
+    "Collect USDT, USDC and supported native coins across eight blockchains",
+    "Create payment requests inline in Telegram",
+    "Create and check payment orders from your website or bot",
+    "Notify your shop when an order is paid, with retries if delivery fails",
+    "Manage payments in a browser or Telegram Mini App"
+  ],
+  "alternativeTo": ["NOWPayments"],
+  "repo": "TGDash/HashPay",
+  "license": "Apache-2.0",
+  "categories": ["finance", "business"],
+  // Field links added after this release was published: a revision, no new build.
+  // Features and alternatives (revision 3).
+  "revision": 3,
+  "authors": [{ "name": "TGDash", "github": "TGDash" }],
+  "maintainers": ["MendyLanda"],
+  // Upstream has no release tags, so the entry follows the default branch by commit.
+  "source": { "ref": "main", "sha": "cbdc18c0679b28d986e4e1cc7c76fd1298fcf1cb" },
+  "install": {
+    "packageManager": "npm",
+    // Cloudflare's Vite plugin writes the bundled Worker and its deploy
+    // config under dist/ and points wrangler at it; the packer follows that
+    // redirect. The D1 migrations are read from src/server/db/d1/migrations,
+    // as wrangler.jsonc's migrations_dir names them. The Worker also bundles
+    // the same files and applies any that d1_migrations lacks, under the same
+    // names, so the two never apply one twice.
+    "wranglerConfig": "wrangler.jsonc",
+    // Upstream's build script (vite build).
+    "buildCommand": "npm run build",
+    // Public app state from the Worker's own code and D1. (/ is served by
+    // the Worker too, but only renders the static app.)
+    "health": { "path": "/api/state" }
+  },
+  // D1, one queue (10,000 operations a day on the free plan) and one cron
+  // trigger every minute fit the free plan. The account's free allowance is
+  // 5 cron triggers in total.
+  "plan": "free",
+  "secrets": [
+    {
+      "name": "TGBOT_TOKEN",
+      "label": "Telegram bot token",
+      "help": "The token of a bot you create with @BotFather. The bot sends payment notices, creates orders inline, and opens the admin console as a Mini App; the first person to message it after setup becomes the admin.",
+      "link": { "label": "Create a bot", "url": "https://t.me/BotFather" }
+    },
+    {
+      "name": "APP_SECRET",
+      "label": "App secret",
+      "help": "Signs admin sessions and sign-in challenges. Setting a new value signs everyone out.",
+      "generate": "password"
+    }
+  ],
+  "postInstall": [
+    {
+      "type": "markdown",
+      "content": "Open {{appUrl}} right away to finish setup: enter this address as the site domain, which points the Telegram bot's webhook at the app. Then send your bot a message in Telegram: the first account to message it becomes the admin, so do this before anyone else can."
+    }
+  ]
+}

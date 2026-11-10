@@ -1,0 +1,54 @@
+{
+  "$schema": "https://appflare.github.io/catalog/schema/v1.json",
+  "slug": "jina-mcp",
+  "name": "Jina AI MCP Server",
+  "summary": "Jina AI's remote MCP server on your own Worker: read pages and PDFs as Markdown, take screenshots, search the web, arXiv and SSRN, and rerank or deduplicate text with Jina's Reader, Search, Embeddings and Reranker APIs.",
+  "tagline": "Let your AI assistant read pages, search the web, and compare text",
+  "features": [
+    "Read web pages and PDFs as text through Jina's Reader API",
+    "Capture web page screenshots through Jina's Reader API",
+    "Search the web and images with a Jina API key",
+    "Find arXiv and SSRN papers with a Jina API key",
+    "Rank documents by relevance with a Jina API key",
+    "Remove text with similar meanings using a Jina API key"
+  ],
+  "homepage": "https://mcp.jina.ai",
+  "repo": "jina-ai/MCP",
+  "license": "Apache-2.0",
+  "categories": ["ai", "developer-tools"],
+  // Field links (revision 2) and the formatting of URLs in the notes (revision 3)
+  // came after this release was published: revisions, no new build.
+  // Features (revision 5).
+  "revision": 5,
+  "authors": [{ "name": "Jina AI", "url": "https://jina.ai", "github": "jina-ai", "x": "JinaAI_" }],
+  "maintainers": ["MendyLanda"],
+  // Upstream has no release tags; the pin is the head of main.
+  "source": { "ref": "main", "sha": "b938c00f0870a75b39a78d5dff1f5bf645151a6e" },
+  "install": {
+    "packageManager": "npm",
+    // The config also routes upstream's own mcp.jina.ai custom domain; the
+    // packer leaves routes out, so an install answers on workers.dev.
+    "wranglerConfig": "wrangler.jsonc"
+  },
+  // One stateless Worker; the Jina APIs it calls are billed by Jina.
+  "plan": "free",
+  "secrets": [
+    {
+      "name": "JINA_API_KEY",
+      "label": "Jina API key",
+      "help": "Used for every call that sends no Authorization header of its own. Anyone who knows this Worker's address can then spend it, so leave it unset and have each client send its own key unless the address stays private. Free keys at https://jina.ai.",
+      "link": { "label": "Get a key", "url": "https://jina.ai/api-dashboard/key-manager" },
+      "optional": true
+    }
+  ],
+  "postInstall": [
+    {
+      "type": "markdown",
+      "content": "Add the server to an MCP client with the URL `{{appUrl}}/v1` and the header `Authorization: Bearer <your Jina API key>`, for example `claude mcp add --transport http jina {{appUrl}}/v1 --header \"Authorization: Bearer <key>\"`. Reading pages and the date and primer tools work without a key, at Jina's lower rate limits."
+    },
+    {
+      "type": "markdown",
+      "content": "The `search_jina_blog` tool needs a key for Jina's own blog that only Jina's hosted server has; leave it out with `{{appUrl}}/v1?exclude_tools=search_jina_blog`."
+    }
+  ]
+}
