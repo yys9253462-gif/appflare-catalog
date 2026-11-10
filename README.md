@@ -1,116 +1,67 @@
-# This catalog
+# Appflare 自建应用目录
 
-A private copy of the [Appflare catalog](https://github.com/appflare/catalog),
-signed with its own key. It carries only the apps this manager installs.
+这是基于 [Appflare 官方应用目录](https://github.com/appflare/catalog) 建立的自建目录，与 [自建 Appflare 管理器](https://github.com/yys9253462-gif/appflare)配合使用。应用清单保存在本仓库，构建产物发布到本仓库的 GitHub Releases，并使用本目录的密钥签名。
 
-Add it in Appflare under **Settings > Catalogs > Add catalog**:
+本仓库目前收录了 140 份应用清单，包括网站分析、短链接、文件、邮件和开发工具等类别。**清单存在不代表对应应用包已经发布或可以安装**：应用需要先通过构建、签名和发布流程，才会出现在已发布的目录索引中。
 
-- **Index URL**: `https://yys9253462-gif.github.io/appflare-catalog/index.json`
-- **Public key**:
+- [已发布的目录索引](https://yys9253462-gif.github.io/appflare-catalog/index.json)
+- [构建和发布记录](https://github.com/yys9253462-gif/appflare-catalog/actions/workflows/publish.yml)
+- [已发布的应用包](https://github.com/yys9253462-gif/appflare-catalog/releases)
+- [应用清单](apps/)
+
+## 添加到管理器
+
+在已安装的 Appflare 管理器中，打开 **设置 → 应用目录 → 添加目录**，填写索引地址和公钥：
+
+**索引地址**
+
+```text
+https://yys9253462-gif.github.io/appflare-catalog/index.json
+```
+
+**公钥**
 
 ```json
 {"keyId":"yys9253462-gif-2026-10","publicKeyBase64":"/VioFbEWodpbJifio6zNSyKUzBnLLuwkC7Tetjxlizw="}
 ```
 
-- **Fingerprint**: `SHA256:bdzib5njKeZ4hoh+Kief68VK/nGdFjfLhG7/xZNZIsM`
-  (the Add a catalog dialog shows the fingerprint of the key you paste; compare it
-  with this line before saving)
+添加时，对话框会显示密钥指纹。保存前，请与以下指纹核对：
 
-Apps: `counterscale`, `open-seo`, `sink`. Everything else from the template was
-removed; add one back from `appflare/catalog` and the next publish builds and signs
-it.
+```text
+SHA256:bdzib5njKeZ4hoh+Kief68VK/nGdFjfLhG7/xZNZIsM
+```
 
----
+选择**校验并添加**后，管理器会读取索引，并使用所填公钥验证其中一个已发布应用。添加成功后，可在应用中心浏览并安装该目录中已发布的应用。只有管理员可以添加或修改目录。
 
-<h1 align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo_full_white.svg">
-    <img alt="Appflare catalog" src="docs/assets/logo_full.svg" width="240">
-  </picture>
-</h1>
+原作者的官方目录和本目录是两个独立来源。若只希望使用本目录的应用包，可在目录设置中关闭官方目录；关闭不会卸载已经安装的应用。
 
-<p align="center"><strong>100+ apps for your own Cloudflare account.</strong></p>
+## 应用如何安装和运行
 
-The official app catalog for [Appflare](https://github.com/appflare/appflare).
-Find apps for analytics, email, files, AI, productivity and more, then install and
-update them from your Appflare dashboard.
+1. 本仓库每个 `apps/<slug>/appflare.jsonc` 指明应用的上游 GitHub 仓库和固定提交。
+2. 发布工作流从该提交构建应用，用本目录的密钥签名，并发布到本仓库的 GitHub Releases。
+3. 管理器读取目录索引，从 Releases 下载并校验应用包，再安装到你的 Cloudflare 账户。
+4. 安装后的应用运行在你的 Cloudflare 账户中。所需的 Worker、数据库、存储及其他资源取决于应用自身的配置。
 
-[![Install Appflare](docs/assets/install-appflare.svg)](https://link.appflare.dev/deploy?utm_source=github&utm_medium=readme&utm_campaign=appflare&utm_content=catalog-readme-install-1)
+应用的构建依赖其上游源码和构建时所需的依赖；已发布的应用包由本仓库提供。不同应用可能需要 Cloudflare 付费套餐、域名、R2 或其他服务，安装前请查看管理器显示的要求。
 
-[Browse all apps](https://appflare.dev/apps/?utm_source=github&utm_medium=readme&utm_campaign=appflare&utm_content=catalog-readme-apps-1) · [Install Appflare](https://link.appflare.dev/deploy?utm_source=github&utm_medium=readme&utm_campaign=appflare&utm_content=catalog-readme-install-2) · [Submit an app](https://appflare.dev/catalog/submit/?utm_source=github&utm_medium=readme&utm_campaign=appflare&utm_content=catalog-readme-catalog-submit-1) · [Contributing](CONTRIBUTING.md)
+## 添加或更新应用
 
-[![The Appflare catalog with app categories and popular apps](docs/assets/catalog-preview.png)](https://appflare.dev/apps/?utm_source=github&utm_medium=readme&utm_campaign=appflare&utm_content=catalog-readme-apps-2)
+应用清单位于 `apps/<slug>/`，目录名必须与清单中的 `slug` 一致。新增或更新时，请检查上游仓库、固定的完整提交 SHA、许可证、构建命令和资源要求；然后运行本地校验，并根据修改更新维护者文件。相关格式和流程可参考 [CONTRIBUTING.md](CONTRIBUTING.md) 和 [TEMPLATE.md](TEMPLATE.md)。
 
-## Find your next app
+推送符合发布条件的变更后，发布工作流会处理尚未发布的应用版本、更新索引并部署目录页面。若构建或发布失败，请先查看对应的 [Actions 记录](https://github.com/yys9253462-gif/appflare-catalog/actions/workflows/publish.yml)；不要将清单数量当作已发布或已验证的应用数量。
 
-A few apps you can install through Appflare:
+## 仓库结构
 
-| App | What it does |
+| 路径 | 内容 |
 | --- | --- |
-| <img src="apps/open-seo/icon.png" width="32" height="32" alt=""> [OpenSEO](https://appflare.dev/apps/open-seo/?utm_source=github&utm_medium=readme&utm_campaign=appflare&utm_content=catalog-readme-apps-open-seo-1) | Find search terms, track rankings and check your site's health. |
-| <img src="apps/sink/icon.png" width="32" height="32" alt=""> [Sink](https://appflare.dev/apps/sink/?utm_source=github&utm_medium=readme&utm_campaign=appflare&utm_content=catalog-readme-apps-sink-1) | Create short links and track their visits. |
-| <img src="apps/counterscale/icon.png" width="32" height="32" alt=""> [Counterscale](https://appflare.dev/apps/counterscale/?utm_source=github&utm_medium=readme&utm_campaign=appflare&utm_content=catalog-readme-apps-counterscale-1) | Track website visits with a dashboard you host yourself. |
-| <img src="apps/agentic-inbox/icon.svg" width="32" height="32" alt=""> [Agentic Inbox](https://appflare.dev/apps/agentic-inbox/?utm_source=github&utm_medium=readme&utm_campaign=appflare&utm_content=catalog-readme-apps-agentic-inbox-1) | Your own email inbox with an AI assistant that drafts replies. |
-| <img src="apps/nodewarden/icon.png" width="32" height="32" alt=""> [NodeWarden](https://appflare.dev/apps/nodewarden/?utm_source=github&utm_medium=readme&utm_campaign=appflare&utm_content=catalog-readme-apps-nodewarden-1) | A password vault that syncs with your Bitwarden apps. |
+| [`apps/`](apps/) | 应用清单、图片及打包说明 |
+| [`index.json`](index.json) | 工作流生成的目录索引 |
+| [`schema/`](schema/) | 清单格式定义 |
+| [`scripts/`](scripts/) | 校验、打包和维护工具 |
+| [`.github/workflows/`](.github/workflows/) | 构建、签名和发布工作流 |
 
-[Explore the full catalog](https://appflare.dev/apps/?utm_source=github&utm_medium=readme&utm_campaign=appflare&utm_content=catalog-readme-apps-3) for app details,
-screenshots, licenses and requirements.
+## 许可证
 
-## Install an app
+本目录的工具遵循 [Apache-2.0](LICENSE)。各应用及其素材分别遵循各自上游的许可；收录在目录中不会改变它们的许可条件。
 
-1. [Install Appflare](https://link.appflare.dev/deploy?utm_source=github&utm_medium=readme&utm_campaign=appflare&utm_content=catalog-readme-install-3) in your Cloudflare account.
-2. Open **Catalog** in Appflare and choose an app.
-3. Review its requirements, fill in any settings it needs and select **Install**.
-
-Appflare creates the resources the app needs. Afterwards you manage its updates,
-custom domains and access control from the same dashboard. The app runs in your
-account and keeps running without Appflare.
-
-Appflare is free. Each app's page shows its requirements and whether it needs Workers
-Paid. Apps count against your own Cloudflare plan, and some use third-party services
-with their own pricing.
-
-## Add or improve an app
-
-You can submit an app, update an existing entry or improve its description and
-images. Adding an app does not require changing the upstream project's repository,
-but its repository needs at least 50 GitHub stars. That bar may rise over time.
-
-1. Follow the [submission guide](https://appflare.dev/catalog/submit/?utm_source=github&utm_medium=readme&utm_campaign=appflare&utm_content=catalog-readme-catalog-submit-2) to create
-   `apps/<slug>/appflare.jsonc`, or edit an existing entry.
-2. Set up the [local tooling and checks](CONTRIBUTING.md#local-tooling).
-3. Open a pull request with your changes.
-4. Once the app is listed, please ask the upstream project to add the
-   [Install with Appflare badge](https://appflare.dev/catalog/install-badge/) to its README.
-
-The [contribution guide](CONTRIBUTING.md) covers app requirements, packaging,
-images, version updates and review. To request an app or report a packaging
-problem, [open an issue](https://github.com/appflare/catalog/issues).
-
-## What's in this repository
-
-| Path | Purpose |
-| --- | --- |
-| [`apps/`](apps) | Each app's manifest, images and packaging notes. |
-| [`index.json`](index.json) | The published catalog Appflare reads. Generated by the workflows; do not edit it directly. |
-| [`schema/`](schema) | The manifest schema. |
-| [`scripts/`](scripts) | Tools for validating entries, building releases and maintaining the catalog. |
-
-Each entry pins one upstream commit. GitHub workflows build the releases, update
-`index.json` and run install checks on pull requests and every night. See
-[how the catalog works](https://appflare.dev/catalog/how-it-works/?utm_source=github&utm_medium=readme&utm_campaign=appflare&utm_content=catalog-readme-catalog-how-it-works-1) for the details.
-
-## Run your own catalog
-
-Use this repository as a template for a community collection or your own apps,
-signed with your own key. Appflare admins can add it under **Settings > Catalogs**.
-[TEMPLATE.md](TEMPLATE.md) covers publishing and connecting your catalog.
-
-## License
-
-Catalog tooling is [Apache-2.0](LICENSE). Each app keeps its upstream license, and
-listing it here does not change that. Most apps are open source. A few are
-source-available or have no license, and their app pages say so.
-
-Appflare is an independent open-source project and is not affiliated with,
-endorsed by or sponsored by Cloudflare, Inc.
+Appflare 是独立开源项目，与 Cloudflare, Inc. 没有隶属、背书或赞助关系。
