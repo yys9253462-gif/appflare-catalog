@@ -1,8 +1,8 @@
 # Appflare 自建应用目录
 
-这是基于 [Appflare 官方应用目录](https://github.com/appflare/catalog) 建立的自建目录，与 [自建 Appflare 管理器](https://github.com/yys9253462-gif/appflare)配合使用。应用清单保存在本仓库，构建产物发布到本仓库的 GitHub Releases，并使用本目录的密钥签名。
+这是与 [Appflare 管理面板](https://github.com/yys9253462-gif/appflare)（部署站：[cf.hejige.com](https://cf.hejige.com/)）配套的自建应用目录。应用清单保存在本仓库，构建产物发布到本仓库的 GitHub Releases，并使用本目录的自有密钥签名。
 
-本仓库目前收录了 140 份应用清单，包括网站分析、短链接、文件、邮件和开发工具等类别。**清单存在不代表对应应用包已经发布或可以安装**：应用需要先通过构建、签名和发布流程，才会出现在已发布的目录索引中。
+本仓库共收录了 140 份应用清单，涵盖网站分析、短链接、文件、邮件、AI 与开发工具等类别；其中 **139 个可构建应用**已完成自动构建、Ed25519 签名（密钥 ID：`yys9253462-gif-2026-10`）并发布到本仓库 Releases 与目录索引中（个别上游源码已失效的清单未纳入发布索引）。
 
 - [已发布的目录索引](https://yys9253462-gif.github.io/appflare-catalog/index.json)
 - [构建和发布记录](https://github.com/yys9253462-gif/appflare-catalog/actions/workflows/publish.yml)
@@ -11,7 +11,7 @@
 
 ## 添加到管理器
 
-在已安装的 Appflare 管理器中，打开 **设置 → 应用目录 → 添加目录**，填写索引地址和公钥：
+在已安装的 Appflare 管理器中（可通过 [cf.hejige.com/deploy](https://cf.hejige.com/deploy/) 一键部署），打开 **设置 → 应用目录 → 添加目录**，填写索引地址和公钥：
 
 **索引地址**
 
@@ -31,9 +31,7 @@ https://yys9253462-gif.github.io/appflare-catalog/index.json
 SHA256:bdzib5njKeZ4hoh+Kief68VK/nGdFjfLhG7/xZNZIsM
 ```
 
-选择**校验并添加**后，管理器会读取索引，并使用所填公钥验证其中一个已发布应用。添加成功后，可在应用中心浏览并安装该目录中已发布的应用。只有管理员可以添加或修改目录。
-
-原作者的官方目录和本目录是两个独立来源。若只希望使用本目录的应用包，可在目录设置中关闭官方目录；关闭不会卸载已经安装的应用。
+选择**校验并添加**后，管理器会读取索引，并使用所填公钥验证其中一个已发布应用。添加成功后，可在应用中心浏览并安装本目录中全部已发布的应用。只有管理员可以添加或修改目录；如需仅展示本目录中的应用，可在列表开关中关闭其他目录来源（关闭不会卸载已经安装的应用）。
 
 ## 应用如何安装和运行
 
